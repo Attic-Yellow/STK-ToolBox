@@ -1,0 +1,279 @@
+﻿<UserControl x:Class="STK_ToolBox.View.CameraControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:STK_ToolBox.ViewModels"
+             xmlns:helpers="clr-namespace:STK_ToolBox.Helpers"
+             mc:Ignorable="d">
+
+    <!-- ===== 리소스: 색/두께/스타일 공통 ===== -->
+    <UserControl.Resources>
+        <!-- 팔레트 -->
+        <SolidColorBrush x:Key="Primary" Color="#2563EB"/>
+        <SolidColorBrush x:Key="PrimaryDark" Color="#1E40AF"/>
+        <SolidColorBrush x:Key="BorderBrushSoft" Color="#E5E7EB"/>
+        <SolidColorBrush x:Key="TextMuted" Color="#6B7280"/>
+        <SolidColorBrush x:Key="CardBg" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="ListAlt" Color="#FAFAFA"/>
+
+        <!-- 텍스트 기본 -->
+        <Style TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="#1F2937"/>
+            <Setter Property="Margin" Value="0,2,0,2"/>
+        </Style>
+
+        <!-- 버튼: 기본/보조/위험 -->
+        <Style x:Key="BaseButton" TargetType="Button">
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="MinWidth" Value="112"/>
+            <Setter Property="Padding" Value="14,0"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="Background" Value="#F3F4F6"/>
+            <Setter Property="Foreground" Value="#111827"/>
+            <Setter Property="BorderBrush" Value="#D1D5DB"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" CornerRadius="6"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#E5E7EB"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.55"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="PrimaryButton" BasedOn="{StaticResource BaseButton}" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource Primary}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="{StaticResource PrimaryDark}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" CornerRadius="6"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="{StaticResource PrimaryDark}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.55"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 카드 -->
+        <Style x:Key="CardBorder" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource CardBg}"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushSoft}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <!-- 입력 -->
+        <Style TargetType="TextBox">
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Margin" Value="0,0,10,0"/>
+        </Style>
+        <Style TargetType="PasswordBox">
+            <Setter Property="Height" Value="30"/>
+        </Style>
+
+        <!-- 리스트 항목 컨테이너 -->
+        <Style TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="6"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="bd" CornerRadius="8" Background="{TemplateBinding Background}">
+                            <ContentPresenter Margin="6,2"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#F3F4F6"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#E5F1FF"/>
+                                <Setter Property="BorderBrush" TargetName="bd" Value="#BFDBFE"/>
+                                <Setter Property="BorderThickness" TargetName="bd" Value="1"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 컨버터 -->
+        <helpers:BooleanToBrushConverter x:Key="BooleanToBrushConverter"/>
+        <helpers:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+    </UserControl.Resources>
+
+    <!-- VM 인스턴스 (코드비하인드에서 설정한다면 제거) -->
+    <UserControl.DataContext>
+        <vm:CameraViewModel/>
+    </UserControl.DataContext>
+
+    <!-- ===== 레이아웃 ===== -->
+    <Grid Background="#F4F5F7">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- 헤더 -->
+            <RowDefinition Height="Auto"/>
+            <!-- 로그인/버튼 -->
+            <RowDefinition Height="*"/>
+            <!-- 리스트 -->
+            <RowDefinition Height="Auto"/>
+            <!-- 상태바 -->
+        </Grid.RowDefinitions>
+
+        <!-- 헤더 -->
+        <DockPanel Grid.Row="0" Margin="16,16,16,8">
+            <TextBlock Text="Connected Cameras (192.168.10.200–255)"
+                       FontSize="18" FontWeight="SemiBold" />
+            <TextBlock DockPanel.Dock="Right"
+                       Foreground="{StaticResource TextMuted}"
+                       VerticalAlignment="Center"
+                       Text="{Binding ElementName=LbCameras, Path=Items.Count, StringFormat=표시 수: {0}}" />
+        </DockPanel>
+
+        <!-- 로그인 + 컨트롤 -->
+        <Border Grid.Row="1" Margin="16,0,16,12" Style="{StaticResource CardBorder}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <!-- 로그인 -->
+                    <RowDefinition Height="12"/>
+                    <RowDefinition Height="Auto"/>
+                    <!-- 버튼 -->
+                </Grid.RowDefinitions>
+
+                <!-- 로그인 -->
+                <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Username" Margin="0,0,8,0" Foreground="{StaticResource TextMuted}"/>
+                    <TextBox Width="180" Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"/>
+                    <TextBlock Text="Password" Margin="14,0,8,0" Foreground="{StaticResource TextMuted}"/>
+                    <PasswordBox x:Name="PwdBox" Width="180" PasswordChanged="PwdBox_PasswordChanged"/>
+                </StackPanel>
+
+                <!-- 버튼 -->
+                <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal">
+                    <Button Style="{StaticResource PrimaryButton}" Content="SCAN" Command="{Binding ScanCommand}"/>
+                    <Button Style="{StaticResource BaseButton}" Content="취소" Command="{Binding CancelScanCommand}"/>
+                    <Separator Margin="8,0" Width="1" Background="{StaticResource BorderBrushSoft}"/>
+                    <Button Style="{StaticResource BaseButton}" Content="전체선택" Command="{Binding SelectAllCommand}"/>
+                    <Button Style="{StaticResource BaseButton}" Content="선택해제" Command="{Binding ClearSelectionCommand}"/>
+                    <Separator Margin="8,0" Width="1" Background="{StaticResource BorderBrushSoft}"/>
+                    <Button Style="{StaticResource BaseButton}" MinWidth="220"
+                            Content="선택 열기 (브라우저/로그인 시도)"
+                            Command="{Binding OpenSelectedInBrowserCommand}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 리스트 (온라인만 표시: ItemsSource=CamerasView) -->
+        <Border Grid.Row="2" Margin="16" Style="{StaticResource CardBorder}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Empty-state 안내 -->
+                <TextBlock Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="{StaticResource TextMuted}"
+                           Visibility="{Binding ElementName=LbCameras, Path=HasItems, Converter={StaticResource NullToVisibilityConverter}}">
+                    스캔 결과가 없습니다. 상단의 SCAN을 눌러 검색하세요.
+                </TextBlock>
+
+                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                    <ListBox x:Name="LbCameras"
+                             ItemsSource="{Binding CamerasView}"
+                             SelectedItem="{Binding SelectedCamera}"
+                             BorderThickness="0"
+                             MinHeight="380">
+                        <ListBox.ItemContainerStyle>
+                            <Style BasedOn="{StaticResource {x:Type ListBoxItem}}"
+                                   TargetType="ListBoxItem"/>
+                        </ListBox.ItemContainerStyle>
+
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="28"/>
+                                        <!-- 체크 -->
+                                        <ColumnDefinition Width="16"/>
+                                        <!-- 점 -->
+                                        <ColumnDefinition Width="160"/>
+                                        <!-- IP -->
+                                        <ColumnDefinition Width="*"/>
+                                        <!-- 타입/기타 -->
+                                    </Grid.ColumnDefinitions>
+
+                                    <CheckBox Grid.Column="0" VerticalAlignment="Center"
+                                              IsChecked="{Binding IsSelected}"/>
+
+                                    <Ellipse Grid.Column="1" Width="10" Height="10" VerticalAlignment="Center"
+                                             Fill="{Binding IsOnline, Converter={StaticResource BooleanToBrushConverter}}"/>
+
+                                    <TextBlock Grid.Column="2" Text="{Binding Ip}" VerticalAlignment="Center"
+                                               FontWeight="SemiBold"/>
+
+                                    <TextBlock Grid.Column="3" VerticalAlignment="Center"
+                                               Foreground="{StaticResource TextMuted}"
+                                               Visibility="{Binding StreamUrl, Converter={StaticResource NullToVisibilityConverter}}"
+                                               Text="MJPEG 가능"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </ScrollViewer>
+
+                <!-- 하단 라벨(선택 정보) -->
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="6,8,6,0">
+                    <TextBlock Text="선택:" Foreground="{StaticResource TextMuted}"/>
+                    <TextBlock Text="{Binding SelectedCamera.Ip, FallbackValue=없음}" Margin="6,0,0,0"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 상태바 -->
+        <Border Grid.Row="3" Background="#EEF2F7" Padding="10,8" BorderBrush="{StaticResource BorderBrushSoft}" BorderThickness="1,0,0,0">
+            <DockPanel>
+                <TextBlock Text="{Binding PlayerStatus}" Foreground="#374151" />
+               <!-- <TextBlock DockPanel.Dock="Right" Foreground="{StaticResource TextMuted}">
+                    힌트: 결과 행 더블클릭으로도 열 수 있어요 
+                </TextBlock> -->
+            </DockPanel>
+        </Border>
+    </Grid>
+</UserControl>

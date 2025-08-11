@@ -1,0 +1,174 @@
+﻿<UserControl x:Class="STK_ToolBox.View.TimeSyncControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d"
+             Background="#F4F6F9">
+
+    <UserControl.Resources>
+        <!-- 텍스트 -->
+        <Style TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#1E1E1E"/>
+            <Setter Property="Margin" Value="0,4,8,4"/>
+        </Style>
+
+        <!-- 입력 컨트롤 -->
+        <Style TargetType="TextBox">
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Margin" Value="8,2"/>
+        </Style>
+
+        <Style TargetType="ComboBox">
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Margin" Value="8,2"/>
+        </Style>
+
+        <!-- 버튼 -->
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="#1976D2"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="6,0"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderBrush" Value="#1565C0"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#1565C0"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#0D47A1"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.6"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- DataGrid -->
+        <Style TargetType="DataGrid">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#D1D5DB"/>
+            <Setter Property="GridLinesVisibility" Value="All"/>
+            <Setter Property="RowBackground" Value="#FAFAFA"/>
+            <Setter Property="AlternatingRowBackground" Value="#F0F0F0"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="703*"/>
+            <ColumnDefinition Width="51*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- 진행률 -->
+            <RowDefinition Height="Auto"/>
+            <!-- 계정 -->
+            <RowDefinition Height="Auto"/>
+            <!-- 메인PC + 범위체크 + 스캔 -->
+            <RowDefinition Height="*"/>
+            <!-- 목록 -->
+            <RowDefinition Height="Auto"/>
+            <!-- 버튼영역 -->
+        </Grid.RowDefinitions>
+
+        <!-- 진행률 -->
+        <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,12" Grid.ColumnSpan="2">
+            <TextBlock Text="탐색 진행률:"/>
+            <ProgressBar Value="{Binding ScanProgress}" Minimum="0" Maximum="100" Width="200" Height="18" Margin="6,0"/>
+            <TextBlock Text="{Binding ScanProgress}" Margin="10,0"/>
+        </StackPanel>
+
+        <!-- 기본(전역) 계정 입력 -->
+        <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="0,0,0,12" Grid.ColumnSpan="2">
+            <TextBlock Text="기본 계정(ID):"/>
+            <TextBox Width="150" Text="{Binding AdminId, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBlock Text="기본 비밀번호:"/>
+            <PasswordBox Width="150" x:Name="PwdBox"/>
+            <TextBlock Text="(※ IP별 개별 계정이 없을 때만 사용)" Margin="8,0,0,0" Foreground="#666"/>
+        </StackPanel>
+
+        <!-- 메인 PC + 스캔범위 + Scan 버튼 -->
+        <DockPanel Grid.Row="2" LastChildFill="True" Margin="0,0,0,12" Grid.ColumnSpan="2">
+            <!-- 메인PC 선택 -->
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                <TextBlock Text="메인 PC 선택:" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding PcList}" 
+                          SelectedItem="{Binding SelectedPc}" 
+                          DisplayMemberPath="Ip" 
+                          Width="200" Margin="8,0,16,0"/>
+            </StackPanel>
+
+            <!-- 100단위 범위 체크 -->
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
+                <TextBlock Text="스캔 범위:" VerticalAlignment="Center"/>
+                <CheckBox Content="0–99" Margin="8,0" IsChecked="{Binding Range0Checked}"/>
+                <CheckBox Content="100–199" Margin="8,0" IsChecked="{Binding Range100Checked}"/>
+                <CheckBox Content="200–254" Margin="8,0" IsChecked="{Binding Range200Checked}"/>
+            </StackPanel>
+
+            <!-- Scan 버튼 -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Scan" Width="100" Command="{Binding ScanCommand}" 
+                        IsEnabled="{Binding IsNotScanning}"/>
+            </StackPanel>
+        </DockPanel>
+
+        <!-- PC 목록 -->
+        <DataGrid ItemsSource="{Binding PcList}" Grid.Row="3"
+                  AutoGenerateColumns="False" IsReadOnly="False"
+                  CanUserAddRows="False" Margin="0,0,0,10"
+                  HeadersVisibility="Column"
+                  RowHeaderWidth="0"
+                  ColumnHeaderHeight="28"
+                  FontSize="13" Grid.ColumnSpan="2">
+            <DataGrid.Columns>
+                <DataGridCheckBoxColumn Header="선택" Binding="{Binding IsSelected, Mode=TwoWay}" Width="60"/>
+                <DataGridTextColumn Header="PC 이름" Binding="{Binding Name}" Width="*"/>
+                <DataGridTextColumn Header="IP 주소" Binding="{Binding Ip}" Width="*"/>
+                <DataGridTextColumn Header="상태" Binding="{Binding Status}" Width="*"/>
+                <DataGridTextColumn Header="시간" Binding="{Binding RemoteTime}" Width="*"/>
+
+                <!-- 계정(표시) -->
+                <DataGridTextColumn Header="계정(ID)" Binding="{Binding CredentialUserDisplay}" Width="130"/>
+
+                <!-- 계정 설정 버튼 -->
+                <DataGridTemplateColumn Header="계정 설정" Width="110">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="{Binding CredentialButtonText}" 
+                                    Click="SetCredential_Click"
+                                    Tag="{Binding}" Width="90"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- 버튼 영역 -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0" Grid.ColumnSpan="2">
+            <Button Content="전체 선택" Width="100" Command="{Binding SelectAllCommand}"/>
+            <Button Content="전체 해제" Width="100" Command="{Binding DeselectAllCommand}"/>
+            <Button Content="선택된 PC 동기화" Width="160" Click="SyncWithPassword_Click"/>
+        </StackPanel>
+    </Grid>
+
+</UserControl>
