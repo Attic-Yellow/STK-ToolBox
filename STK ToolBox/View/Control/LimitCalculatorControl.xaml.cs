@@ -15,7 +15,6 @@ namespace STK_ToolBox.View
         public LimitCalculatorControl()
         {
             InitializeComponent();
-            this.DataContext = new LimitCalculatorViewModel();
         }
     }
 }

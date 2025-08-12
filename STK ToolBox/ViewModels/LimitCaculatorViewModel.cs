@@ -1,9 +1,8 @@
-﻿using Microsoft.Win32;
+﻿using Microsoft.Win32; // BrowseCommand 제거했으면 없어도 됨
 using System;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
@@ -12,34 +11,47 @@ namespace STK_ToolBox.ViewModels
 {
     public class LimitCalculatorViewModel : INotifyPropertyChanged
     {
-        public ObservableCollection<string> AxisList { get; set; } = new ObservableCollection<string>();
-
+        // 부모가 주입해주는 값들 (상단 고정 패널에서 설정)
         private string _iniPath = @"D:\LBS_DB\ServoParameter.ini";
         public string IniPath
         {
             get => _iniPath;
-            set { _iniPath = value; OnPropertyChanged(); ReadAndDisplayAxisLimits(); }
+            set
+            {
+                _iniPath = value;
+                OnPropertyChanged();
+                if (!_suppressRead) ReadAndDisplayAxisLimits();
+            }
         }
 
         private string _selectedAxis;
         public string SelectedAxis
         {
             get => _selectedAxis;
-            set { _selectedAxis = value; OnPropertyChanged(); ReadAndDisplayAxisLimits(); }
+            set
+            {
+                _selectedAxis = value;
+                OnPropertyChanged();
+                if (!_suppressRead) ReadAndDisplayAxisLimits();
+            }
         }
 
+        // 유지용
         private int _axisCount = 4;
         public int AxisCount
         {
             get => _axisCount;
-            set { _axisCount = value; OnPropertyChanged(); UpdateAxisList(value); }
+            set { _axisCount = value; OnPropertyChanged(); }
         }
 
-        public string SoftLimitPlus { get; set; }
-        public string SoftLimitPlusDelta { get; set; }
-        public string SoftLimitMinus { get; set; }
-        public string SoftLimitMinusDelta { get; set; }
+        // ===== 입력값 (setter에서 프리뷰 재계산) =====
+        private string _softLimitPlus, _softLimitPlusDelta, _softLimitMinus, _softLimitMinusDelta;
+        public string SoftLimitPlus { get => _softLimitPlus; set { _softLimitPlus = value; OnPropertyChanged(); RecalcPreview(); } }
+        public string SoftLimitPlusDelta { get => _softLimitPlusDelta; set { _softLimitPlusDelta = value; OnPropertyChanged(); RecalcPreview(); } }
+        public string SoftLimitMinus { get => _softLimitMinus; set { _softLimitMinus = value; OnPropertyChanged(); RecalcPreview(); } }
+        public string SoftLimitMinusDelta { get => _softLimitMinusDelta; set { _softLimitMinusDelta = value; OnPropertyChanged(); RecalcPreview(); } }
 
+        // ===== INI에서 읽은 현재값(고정 표시) =====
         private int _softPlus;
         private int _softMinus;
 
@@ -51,75 +63,98 @@ namespace STK_ToolBox.ViewModels
         public string CurrentSoftLimitMinusHighHex => ((_softMinus >> 16) & 0xFFFF).ToString("X4");
         public string CurrentSoftLimitMinusLowHex => (_softMinus & 0xFFFF).ToString("X4");
 
+        // ===== 미리보기 값(입력에 따라 즉시 반영) =====
+        private int _previewPlus, _previewMinus;
+
+        public string PreviewSoftLimitPlusDecimal => _previewPlus.ToString();
+        public string PreviewSoftLimitPlusHighHex => ((_previewPlus >> 16) & 0xFFFF).ToString("X4");
+        public string PreviewSoftLimitPlusLowHex => (_previewPlus & 0xFFFF).ToString("X4");
+
+        public string PreviewSoftLimitMinusDecimal => _previewMinus.ToString();
+        public string PreviewSoftLimitMinusHighHex => ((_previewMinus >> 16) & 0xFFFF).ToString("X4");
+        public string PreviewSoftLimitMinusLowHex => (_previewMinus & 0xFFFF).ToString("X4");
+
+        // 커맨드
         public ICommand ApplyCommand { get; }
         public ICommand ZeroParamsCommand { get; }
-        public ICommand BrowseCommand { get; }
+
+        // 가드
+        //private bool _isBusy;
+        private bool _suppressRead;
 
         public LimitCalculatorViewModel()
         {
-            UpdateAxisList(AxisCount);
+            ApplyCommand = new RelayCommand(() => ApplyLimits());
+            ZeroParamsCommand = new RelayCommand(() => ZeroParams());
 
-            ApplyCommand = new RelayCommand(ApplyLimits);
-            ZeroParamsCommand = new RelayCommand(ZeroParams);
-            BrowseCommand = new RelayCommand(OpenBrowseDialog);
-
-            ReadAndDisplayAxisLimits();
-        }
-
-        private void UpdateAxisList(int count)
-        {
-            AxisList.Clear();
-            for (int i = 1; i <= count; i++)
-                AxisList.Add($"AXIS_{i}");
-            if (AxisList.Count > 0)
-                SelectedAxis = AxisList[0];
+            ReadAndDisplayAxisLimits(); // 초기 1회 로드
         }
 
         private void ReadAndDisplayAxisLimits()
         {
-            _softPlus = 0;
-            _softMinus = 0;
-
-            if (!File.Exists(IniPath) || string.IsNullOrEmpty(SelectedAxis))
+/*            if (_isBusy) return;
+            _isBusy = true;*/
+            try
             {
-                NotifySoftLimitChange();
-                return;
-            }
+                _softPlus = 0;
+                _softMinus = 0;
 
-            string[] lines = File.ReadAllLines(IniPath);
-            int start = Array.FindIndex(lines, l => l.Trim().Equals($"[{SelectedAxis}]", StringComparison.OrdinalIgnoreCase));
-            if (start == -1) return;
-
-            int end = Array.FindIndex(lines, start + 1, l => l.TrimStart().StartsWith("[AXIS_", StringComparison.OrdinalIgnoreCase));
-            if (end == -1) end = lines.Length;
-
-            int? p228 = null, p229 = null, p22A = null, p22B = null;
-
-            for (int i = start; i < end; i++)
-            {
-                string line = lines[i].Trim();
-                var parts = line.Split('=');
-                if (parts.Length != 2) continue;
-
-                string key = parts[0].Trim();
-                string val = parts[1].Trim();
-
-                if (int.TryParse(val, System.Globalization.NumberStyles.HexNumber, null, out int parsed))
+                if (string.IsNullOrWhiteSpace(IniPath) || !File.Exists(IniPath) || string.IsNullOrWhiteSpace(SelectedAxis))
                 {
-                    switch (key.ToUpper())
+                    NotifySoftLimitChange();
+                    RecalcPreview();
+                    return;
+                }
+
+                var lines = File.ReadAllLines(IniPath);
+                int start = Array.FindIndex(lines, l => l.Trim().Equals($"[{SelectedAxis}]", StringComparison.OrdinalIgnoreCase));
+                if (start == -1)
+                {
+                    NotifySoftLimitChange();
+                    RecalcPreview();
+                    return;
+                }
+
+                int end = Array.FindIndex(lines, start + 1, l => l.TrimStart().StartsWith("[AXIS_", StringComparison.OrdinalIgnoreCase));
+                if (end == -1) end = lines.Length;
+
+                int? p228 = null, p229 = null, p22A = null, p22B = null;
+
+                for (int i = start; i < end; i++)
+                {
+                    string line = lines[i].Trim();
+                    int eq = line.IndexOf('=');
+                    if (eq <= 0) continue;
+
+                    string key = line.Substring(0, eq).Trim();
+                    string val = line.Substring(eq + 1).Trim();
+
+                    if (int.TryParse(val, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int parsed))
                     {
-                        case "PR.228": p228 = parsed; break;
-                        case "PR.229": p229 = parsed; break;
-                        case "PR.22A": p22A = parsed; break;
-                        case "PR.22B": p22B = parsed; break;
+                        switch (key.ToUpperInvariant())
+                        {
+                            case "PR.228": p228 = parsed; break;
+                            case "PR.229": p229 = parsed; break;
+                            case "PR.22A": p22A = parsed; break;
+                            case "PR.22B": p22B = parsed; break;
+                        }
                     }
                 }
+
+                _softPlus = ((p229 ?? 0) << 16) | (p228 ?? 0);
+                _softMinus = ((p22B ?? 0) << 16) | (p22A ?? 0);
+
+                NotifySoftLimitChange();
+                RecalcPreview(); // 현재값 기준으로 프리뷰도 초기화
             }
-
-            _softPlus = ((p229 ?? 0) << 16) | (p228 ?? 0);
-            _softMinus = ((p22B ?? 0) << 16) | (p22A ?? 0);
-
-            NotifySoftLimitChange();
+            catch (Exception ex)
+            {
+                MessageBox.Show("INI 읽기 오류: " + ex.Message);
+            }
+            finally
+            {
+                //_isBusy = false;
+            }
         }
 
         private void NotifySoftLimitChange()
@@ -132,8 +167,35 @@ namespace STK_ToolBox.ViewModels
             OnPropertyChanged(nameof(CurrentSoftLimitMinusLowHex));
         }
 
+        private void RecalcPreview()
+        {
+            int plus = TryParseOr(_softLimitPlus, _softPlus);
+            int deltaPlus = TryParseOr(_softLimitPlusDelta, 0);
+            int minus = TryParseOr(_softLimitMinus, _softMinus);
+            int deltaMinus = TryParseOr(_softLimitMinusDelta, 0);
+
+            _previewPlus = plus + deltaPlus;
+            _previewMinus = minus - deltaMinus;
+
+            OnPropertyChanged(nameof(PreviewSoftLimitPlusDecimal));
+            OnPropertyChanged(nameof(PreviewSoftLimitPlusHighHex));
+            OnPropertyChanged(nameof(PreviewSoftLimitPlusLowHex));
+            OnPropertyChanged(nameof(PreviewSoftLimitMinusDecimal));
+            OnPropertyChanged(nameof(PreviewSoftLimitMinusHighHex));
+            OnPropertyChanged(nameof(PreviewSoftLimitMinusLowHex));
+        }
+
+        private static int TryParseOr(string s, int fallback)
+        {
+            if (int.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out var v))
+                return v;
+            return fallback;
+        }
+
         private void ApplyLimits()
         {
+            //if (_isBusy) return;
+
             if (!int.TryParse(SoftLimitPlus, out int plus) ||
                 !int.TryParse(SoftLimitPlusDelta, out int deltaPlus) ||
                 !int.TryParse(SoftLimitMinus, out int minus) ||
@@ -151,55 +213,104 @@ namespace STK_ToolBox.ViewModels
 
         private void ZeroParams()
         {
+            //if (_isBusy) return;
             UpdateParamsInFile(0, 0);
         }
 
         private void UpdateParamsInFile(int plus, int minus)
         {
-            if (!File.Exists(IniPath) || string.IsNullOrEmpty(SelectedAxis))
+/*            if (_isBusy) return;
+            _isBusy = true;*/
+            try
             {
-                MessageBox.Show("INI 파일 또는 AXIS 정보가 유효하지 않습니다.");
-                return;
-            }
-
-            string[] lines = File.ReadAllLines(IniPath);
-            int start = Array.FindIndex(lines, l => l.Trim().Equals($"[{SelectedAxis}]"));
-            if (start == -1) return;
-
-            int end = Array.FindIndex(lines, start + 1, l => l.TrimStart().StartsWith("[AXIS_"));
-            if (end == -1) end = lines.Length;
-
-            var map = new (string key, int value)[]
-            {
-                ("Pr.228", plus & 0xFFFF),
-                ("Pr.229", (plus >> 16) & 0xFFFF),
-                ("Pr.22A", minus & 0xFFFF),
-                ("Pr.22B", (minus >> 16) & 0xFFFF)
-            };
-
-            for (int i = start; i < end; i++)
-            {
-                foreach (var (key, val) in map)
+                if (string.IsNullOrWhiteSpace(IniPath) || !File.Exists(IniPath) || string.IsNullOrWhiteSpace(SelectedAxis))
                 {
-                    if (lines[i].TrimStart().StartsWith(key))
-                        lines[i] = $"{key} = {val:X4}";
+                    MessageBox.Show("INI 파일 또는 AXIS 정보가 유효하지 않습니다.");
+                    return;
                 }
-            }
 
-            File.WriteAllLines(IniPath, lines);
-            ReadAndDisplayAxisLimits();
-            MessageBox.Show("INI 파일 업데이트 완료");
+                var lines = File.ReadAllLines(IniPath);
+                int start = Array.FindIndex(lines, l => l.Trim().Equals($"[{SelectedAxis}]", StringComparison.OrdinalIgnoreCase));
+                if (start == -1) return;
+
+                int end = Array.FindIndex(lines, start + 1, l => l.TrimStart().StartsWith("[AXIS_", StringComparison.OrdinalIgnoreCase));
+                if (end == -1) end = lines.Length;
+
+                int lowPlus = plus & 0xFFFF;
+                int highPlus = (plus >> 16) & 0xFFFF;
+                int lowMinus = minus & 0xFFFF;
+                int highMinus = (minus >> 16) & 0xFFFF;
+
+                bool has228 = false, has229 = false, has22A = false, has22B = false;
+
+                for (int i = start; i < end; i++)
+                {
+                    string raw = lines[i];
+                    string trimmed = raw.TrimStart();
+                    int eq = trimmed.IndexOf('=');
+                    if (eq <= 0) continue;
+
+                    string key = trimmed.Substring(0, eq).Trim().ToUpperInvariant();
+
+                    if (key == "PR.228")
+                    {
+                        lines[i] = ReplaceKeepingIndent(raw, $"Pr.228 = {lowPlus:X4}");
+                        has228 = true;
+                    }
+                    else if (key == "PR.229")
+                    {
+                        lines[i] = ReplaceKeepingIndent(raw, $"Pr.229 = {highPlus:X4}");
+                        has229 = true;
+                    }
+                    else if (key == "PR.22A")
+                    {
+                        lines[i] = ReplaceKeepingIndent(raw, $"Pr.22A = {lowMinus:X4}");
+                        has22A = true;
+                    }
+                    else if (key == "PR.22B")
+                    {
+                        lines[i] = ReplaceKeepingIndent(raw, $"Pr.22B = {highMinus:X4}");
+                        has22B = true;
+                    }
+                }
+
+                if (!has228 || !has229 || !has22A || !has22B)
+                {
+                    var list = new System.Collections.Generic.List<string>(lines);
+                    int insertAt = end;
+
+                    if (!has228) list.Insert(insertAt++, $"Pr.228 = {lowPlus:X4}");
+                    if (!has229) list.Insert(insertAt++, $"Pr.229 = {highPlus:X4}");
+                    if (!has22A) list.Insert(insertAt++, $"Pr.22A = {lowMinus:X4}");
+                    if (!has22B) list.Insert(insertAt++, $"Pr.22B = {highMinus:X4}");
+
+                    lines = list.ToArray();
+                }
+
+                File.WriteAllLines(IniPath, lines);
+
+                _suppressRead = true;
+                ReadAndDisplayAxisLimits();
+                _suppressRead = false;
+
+                MessageBox.Show("INI 파일 업데이트 완료");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("INI 쓰기 오류: " + ex.Message);
+            }
+            finally
+            {
+                //_isBusy = false;
+            }
         }
 
-        private void OpenBrowseDialog()
+        private static string ReplaceKeepingIndent(string originalLine, string newContent)
         {
-            OpenFileDialog dlg = new OpenFileDialog
-            {
-                Filter = "INI 파일 (*.ini)|*.ini",
-                InitialDirectory = @"D:\"
-            };
-            if (dlg.ShowDialog() == true)
-                IniPath = dlg.FileName;
+            int idx = 0;
+            while (idx < originalLine.Length && char.IsWhiteSpace(originalLine[idx])) idx++;
+            string indent = originalLine.Substring(0, idx);
+            return indent + newContent;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

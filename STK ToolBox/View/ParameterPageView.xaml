@@ -6,11 +6,12 @@
              xmlns:avalonDock="https://github.com/Dirkster99/AvalonDock"
              xmlns:ConLayOut="clr-namespace:STK_ToolBox.View"
              xmlns:Controls="http://metro.mahapps.com/winfx/xaml/controls"
+             xmlns:vm="clr-namespace:STK_ToolBox.ViewModels"
              mc:Ignorable="d">
 
     <UserControl.Resources>
-        
-        <!-- TabControl 스타일 재정의 -->
+
+        <!-- MetroTabControl 템플릿: 탭헤더 아래에 고정영역 끼워넣기 -->
         <Style TargetType="Controls:MetroTabControl" BasedOn="{StaticResource {x:Type Controls:MetroTabControl}}">
             <Setter Property="Template">
                 <Setter.Value>
@@ -18,64 +19,111 @@
                         <Grid KeyboardNavigation.TabNavigation="Local">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
+                                <!-- 탭 헤더 -->
+                                <RowDefinition Height="Auto"/>
+                                <!-- 고정 영역 -->
                                 <RowDefinition Height="*"/>
+                                <!-- 탭 컨텐츠 -->
                             </Grid.RowDefinitions>
 
-                            <!-- 균등 배치 TabPanel -->
-                            <UniformGrid Grid.Row="0" 
-                                     IsItemsHost="True"
-                                     Rows="1"
-                                     HorizontalAlignment="Stretch"/>
+                            <!-- 헤더 -->
+                            <UniformGrid Grid.Row="0" IsItemsHost="True" Rows="1" HorizontalAlignment="Stretch"/>
 
-                            <ContentPresenter Grid.Row="1"
-                                          ContentSource="SelectedContent"
-                                          SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
-                                          Margin="{TemplateBinding Padding}"/>
+                            <!-- 고정 영역(빨간 체크 자리) -->
+                            <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="10" Margin="10,8,10,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- INI -->
+                                    <GroupBox Header="INI 파일" Margin="0,0,8,0">
+                                        <DockPanel LastChildFill="True" Margin="8">
+                                            <TextBlock Text="INI 경로:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <TextBox Text="{Binding IniPath, UpdateSourceTrigger=LostFocus}"
+                                                     Width="350" IsReadOnly="True" DockPanel.Dock="Left" Margin="0,12,8,12"
+                                                     FontSize="14"/>
+                                            <!-- ⬇⬇ 추가: 찾아보기 버튼 -->
+                                            <Button Content="찾아보기" Width="100" Height="28"
+                                                    Command="{Binding BrowseCommand}"
+                                                    ToolTip="INI 파일 경로를 찾아서 선택하세요." />
+                                        </DockPanel>
+                                    </GroupBox>
+
+                                    <!-- AXIS -->
+                                    <GroupBox Header="AXIS 설정" Grid.Column="1" Margin="8,0,0,0">
+                                        <Grid Margin="8">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="120"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBlock Text="AXIS 개수:" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"/>
+                                            <TextBox Text="{Binding AxisCount, UpdateSourceTrigger=LostFocus}" Grid.Row="0" Grid.Column="1" Width="120"/>
+
+                                            <TextBlock Text="AXIS 선택:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="0,6,0,0"/>
+                                            <ComboBox ItemsSource="{Binding AxisList}"
+                                                      SelectedItem="{Binding SelectedAxis}"
+                                                      Grid.Row="1" Grid.Column="1" Width="160" Margin="0,6,0,0" FontSize="13"/>
+                                        </Grid>
+                                    </GroupBox>
+                                </Grid>
+                            </Border>
+
+
+                            <!-- 선택된 탭의 컨텐츠(파랑 체크 자리) -->
+                            <ContentPresenter Grid.Row="2"
+                                              ContentSource="SelectedContent"
+                                              SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
+                                              Margin="{TemplateBinding Padding}"/>
                         </Grid>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
-        <!-- 탭 스타일 커스터마이즈 -->
+
+        <!-- 탭 아이템 스타일(네가 쓰던 톤 유지) -->
         <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
             <Setter Property="MinWidth" Value="120"/>
-            <Setter Property="Padding" Value="20,8"/> <!-- 내부 여백 -->
-        <Setter Property="MinHeight" Value="36"/> <!-- 최소 높이 지정 -->
-        <Setter Property="Background" Value="#E3F2FD"/>
-        <Setter Property="Foreground" Value="#1565C0"/>
-        <Setter Property="FontWeight" Value="Bold"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="TabItem">
-                    <Border x:Name="Bd"
-                            Background="{TemplateBinding Background}"
-                            CornerRadius="6"
-                            BorderBrush="#90CAF9"
-                            BorderThickness="1"
-                            Padding="{TemplateBinding Padding}"
-                            SnapsToDevicePixels="True"
-                            MinHeight="{TemplateBinding MinHeight}">
-                        <ContentPresenter x:Name="Content"
-                                          ContentSource="Header"
-                                          HorizontalAlignment="Center"
-                                          VerticalAlignment="Center"/>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <!-- 선택된 탭 -->
-                        <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="#64B5F6"/>
-                            <Setter TargetName="Bd" Property="BorderBrush" Value="#1E88E5"/>
-                            <Setter Property="Foreground" Value="White"/>
-                        </Trigger>
-                        <!-- 마우스 오버 -->
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="#BBDEFB"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
+            <Setter Property="Padding" Value="20,8"/>
+            <Setter Property="MinHeight" Value="36"/>
+            <Setter Property="Background" Value="#E3F2FD"/>
+            <Setter Property="Foreground" Value="#1565C0"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="6"
+                                BorderBrush="#90CAF9"
+                                BorderThickness="1"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True"
+                                MinHeight="{TemplateBinding MinHeight}">
+                            <ContentPresenter ContentSource="Header"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#64B5F6"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#1E88E5"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#BBDEFB"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
 
     <Grid Background="#F4F6F9">
@@ -90,7 +138,7 @@
                                                          CanHide="False"
                                                          CanClose="False">
 
-                                <!-- 상단 탭 컨트롤 -->
+                                <!-- 탭 컨트롤: 기존 탭 유지, 각 탭의 DataContext를 부모 VM의 자식 VM에 바인딩 -->
                                 <Controls:MetroTabControl x:Name="ParameterTabControl"
                                                           Margin="10"
                                                           FontSize="16"
@@ -100,34 +148,23 @@
 
                                     <!-- 리미트 계산기 -->
                                     <TabItem Header="리미트 계산기">
-                                        <Border Background="White"
-                                                CornerRadius="10"
-                                                Padding="15"
-                                                Margin="5">
-                                            <ConLayOut:LimitCalculatorControl />
+                                        <Border Background="White" CornerRadius="10" Padding="15" Margin="5"
+                                                DataContext="{Binding LimitVM}">
+                                            <ConLayOut:LimitCalculatorControl/>
                                         </Border>
                                     </TabItem>
 
                                     <!-- 원점 좌표계 -->
                                     <TabItem Header="원점 좌표계">
-                                        <Border Background="White"
-                                                CornerRadius="10"
-                                                Padding="15"
-                                                Margin="5">
-                                            <TextBlock Text="추후 업데이트 예정"
-                                                       VerticalAlignment="Center"
-                                                       HorizontalAlignment="Center"
-                                                       FontSize="18"
-                                                       Foreground="Gray"/>
+                                        <Border Background="White" CornerRadius="10" Padding="15" Margin="5"
+                                                DataContext="{Binding OriginVM}">
+                                            <ConLayOut:OriginAxisControl/>
                                         </Border>
                                     </TabItem>
 
                                     <!-- 기타 기능 -->
                                     <TabItem Header="기타 기능">
-                                        <Border Background="White"
-                                                CornerRadius="10"
-                                                Padding="15"
-                                                Margin="5">
+                                        <Border Background="White" CornerRadius="10" Padding="15" Margin="5">
                                             <TextBlock Text="추후 업데이트 예정"
                                                        VerticalAlignment="Center"
                                                        HorizontalAlignment="Center"
