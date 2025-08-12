@@ -32,7 +32,7 @@ namespace STK_ToolBox.ViewModels
         {
             _folderPath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "Teaching_Calculator");
+                "STK_ToolBox");
             _filePath = Path.Combine(_folderPath, "credentials.xml");
         }
 

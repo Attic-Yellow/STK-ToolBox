@@ -94,14 +94,14 @@
                                                           FontSize="16"
                                                           TabStripPlacement="Top">
                                     <!-- Teaching Sheet -->
-                                    <TabItem Header="Teaching Sheet">
+                                    <TabItem Header="티칭 시트">
                                         <Border Background="White" CornerRadius="10" Padding="15" Margin="5">
                                             <ConLayOut:TeachingSheetGeneratorControl />
                                         </Border>
                                     </TabItem>
 
                                     <!-- Torque Sheet -->
-                                    <TabItem Header="Torque Sheet">
+                                    <TabItem Header="토크 시트t">
                                         <Border Background="White" CornerRadius="10" Padding="15" Margin="5">
                                             <TextBlock Text="추후 업데이트 예정"
                                                        VerticalAlignment="Center"

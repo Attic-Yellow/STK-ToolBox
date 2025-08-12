@@ -17,14 +17,13 @@ using System.Windows.Shapes;
 namespace STK_ToolBox.View
 {
     /// <summary>
-    /// ParameterPageView.xaml에 대한 상호 작용 논리
+    /// OriginAxisControl.xaml에 대한 상호 작용 논리
     /// </summary>
-    public partial class ParameterPageView : UserControl
+    public partial class OriginAxisControl : UserControl
     {
-        public ParameterPageView()
+        public OriginAxisControl()
         {
             InitializeComponent();
-            this.DataContext = new ParameterPageViewModel();
         }
     }
 }

@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{AF5F289D-015B-4EF6-AF44-B9B70D297F93}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>Teaching_Calculator</RootNamespace>
-    <AssemblyName>Teaching_Calculator</AssemblyName>
+    <RootNamespace>STK_ToolBox</RootNamespace>
+    <AssemblyName>STK_ToolBox</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -228,10 +228,15 @@
     <Compile Include="ViewModels\CellViewModel.cs" />
     <Compile Include="ViewModels\CredentialStore.cs" />
     <Compile Include="ViewModels\LimitCaculatorViewModel.cs" />
+    <Compile Include="ViewModels\OriginAxisViewModel.cs" />
+    <Compile Include="ViewModels\ParameterPageViewModel.cs" />
     <Compile Include="ViewModels\TeachingViewModel.cs" />
     <Compile Include="ViewModels\TimeSyncViewModel.cs" />
     <Compile Include="View\Control\CameraControl.xaml.cs">
       <DependentUpon>CameraControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\Control\OriginAxisControl.xaml.cs">
+      <DependentUpon>OriginAxisControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="View\Control\TimeSyncControl.xaml.cs">
       <DependentUpon>TimeSyncControl.xaml</DependentUpon>
@@ -271,6 +276,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="View\Control\CameraControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\Control\OriginAxisControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
