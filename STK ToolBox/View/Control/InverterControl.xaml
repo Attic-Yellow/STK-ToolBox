@@ -46,7 +46,7 @@
     </UserControl.Resources>
 
     <UserControl.DataContext>
-        <vm:InverterDriveCCLinkViewModel/>
+        <vm:InverterDriveMxViewModel/>
     </UserControl.DataContext>
 
     <Grid Background="#F4F5F7">
@@ -61,7 +61,7 @@
         <DockPanel Grid.Row="0" Margin="16,16,16,8">
             <TextBlock Text="Inverter (CC-Link)" FontSize="18" FontWeight="SemiBold"/>
             <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
-                <Button Style="{StaticResource BaseButton}" Content="보드 검색" Command="{Binding DetectBoardsCommand}" ToolTip="PC에 꽂힌 CC-Link 보드를 자동 감지합니다."/>
+                <!-- <Button Style="{StaticResource BaseButton}" Content="보드 검색" Command="{Binding DetectBoardsCommand}" ToolTip="PC에 꽂힌 CC-Link 보드를 자동 감지합니다."/> -->
                 <Button Style="{StaticResource BaseButton}" Content="도움말" Command="{Binding ShowHelpCommand}"/>
             </StackPanel>
         </DockPanel>
@@ -77,16 +77,8 @@
 
                 <!-- 연결 -->
                 <StackPanel Orientation="Horizontal" Grid.Column="0" VerticalAlignment="Center">
-                    <TextBlock Text="Board" Foreground="{StaticResource TextMuted}"/>
-                    <ComboBox ItemsSource="{Binding Boards}" SelectedItem="{Binding SelectedBoard}" Width="220">
-                        <ComboBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Name}" ToolTip="{Binding Tip}"/>
-                            </DataTemplate>
-                        </ComboBox.ItemTemplate>
-                    </ComboBox>
-                    <TextBlock Text="Station" Margin="6,0,0,0" Foreground="{StaticResource TextMuted}"/>
-                    <TextBox Width="60" Text="{Binding StationNo, UpdateSourceTrigger=PropertyChanged}" ToolTip="슬레이브 스테이션 번호"/>
+                    <TextBlock Text="Logical Station" Foreground="{StaticResource TextMuted}"/>
+                    <TextBox Width="60" Text="{Binding LogicalStation, UpdateSourceTrigger=PropertyChanged}"/>
                     <Button Style="{StaticResource PrimaryButton}" Content="Connect" Command="{Binding ConnectCommand}"/>
                     <Button Style="{StaticResource BaseButton}" Content="Disconnect" Command="{Binding DisconnectCommand}"/>
                 </StackPanel>
@@ -94,13 +86,13 @@
                 <!-- 파라미터 -->
                 <StackPanel Orientation="Horizontal" Grid.Column="2" VerticalAlignment="Center">
                     <TextBlock Text="RunCmd(RWr)"/>
-                    <TextBox Width="70" Text="{Binding RunCmdAddr}"/>
+                    <TextBox Width="90" Text="{Binding RunCmdDevice}"/>
                     <TextBlock Text="FreqCmd(RWr)" Margin="6,0,0,0"/>
-                    <TextBox Width="70" Text="{Binding FreqCmdAddr}"/>
+                    <TextBox Width="90" Text="{Binding FreqCmdDevice}"/>
                     <TextBlock Text="Stat(RWw)" Margin="6,0,0,0"/>
-                    <TextBox Width="70" Text="{Binding StatAddr}"/>
+                    <TextBox Width="90" Text="{Binding StatDevice}"/>
                     <TextBlock Text="FreqMon(RWw)" Margin="6,0,0,0"/>
-                    <TextBox Width="70" Text="{Binding FreqMonAddr}"/>
+                    <TextBox Width="90" Text="{Binding FreqMonDevice}"/>
                     <TextBlock Text="Hz Unit" Margin="6,0,0,0"/>
                     <TextBox Width="70" Text="{Binding HzUnitDivisor}"/>
                 </StackPanel>

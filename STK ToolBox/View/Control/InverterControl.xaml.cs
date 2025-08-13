@@ -10,12 +10,6 @@ namespace STK_ToolBox.View
         public InverterControl()
         {
             InitializeComponent();
-            Unloaded += (s, e) => (DataContext as InverterDriveCCLinkViewModel)?.Dispose();
-        }
-
-        private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-
         }
     }
 }

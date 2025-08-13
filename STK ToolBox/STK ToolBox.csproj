@@ -222,18 +222,17 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Helpers\BooleanToBrushConverter.cs" />
-    <Compile Include="Helpers\CCLinkClient.cs" />
-    <Compile Include="Helpers\CCLinkNative.cs" />
     <Compile Include="Helpers\DeadCellTooltipConverter.cs" />
     <Compile Include="Helpers\ErrorShortener.cs" />
-    <Compile Include="Helpers\InverterCcLinkController.cs" />
+    <Compile Include="Helpers\InverterViaPlcController.cs" />
+    <Compile Include="Helpers\IPlcClient.cs" />
     <Compile Include="Helpers\Log.cs" />
-    <Compile Include="Helpers\NativeDllHelper.cs" />
+    <Compile Include="Helpers\MxComponentClient.cs" />
     <Compile Include="Helpers\NullToVisibilityConverter.cs" />
     <Compile Include="ViewModels\CameraViewModel.cs" />
     <Compile Include="ViewModels\CellViewModel.cs" />
     <Compile Include="ViewModels\CredentialStore.cs" />
-    <Compile Include="ViewModels\InverterDriveCCLinkViewModel.cs" />
+    <Compile Include="ViewModels\InverterDriveMxViewModel.cs" />
     <Compile Include="ViewModels\LimitCaculatorViewModel.cs" />
     <Compile Include="ViewModels\OriginAxisViewModel.cs" />
     <Compile Include="ViewModels\ParameterPageViewModel.cs" />
