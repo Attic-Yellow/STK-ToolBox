@@ -101,7 +101,7 @@
                                     </TabItem>
 
                                     <!-- Torque Sheet -->
-                                    <TabItem Header="토크 시트t">
+                                    <TabItem Header="토크 시트">
                                         <Border Background="White" CornerRadius="10" Padding="15" Margin="5">
                                             <TextBlock Text="추후 업데이트 예정"
                                                        VerticalAlignment="Center"
