@@ -89,45 +89,70 @@
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0" Grid.RowSpan="5" Background="#E7ECF7" BorderBrush="#C3CCD7" BorderThickness="0,0,0,1">
-            <StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="16,14,16,8">
-                    <!-- Base Pitch ... -->
-                    <TextBlock Text="Base Pitch" VerticalAlignment="Center" Foreground="#2C405A" FontSize="13" Margin="0,0,12,0"/>
-                    <TextBox Text="{Binding BasePitch, UpdateSourceTrigger=PropertyChanged}" Width="80" FontSize="13" Margin="0,0,18,0"/>
-                    <TextBlock Text="Profile Pitch" VerticalAlignment="Center" Foreground="#2C405A" FontSize="13" Margin="0,0,12,0"/>
-                    <TextBox Text="{Binding ProfilePitch, UpdateSourceTrigger=PropertyChanged}" Width="80" FontSize="13" Margin="0,0,18,0"/>
-                    <TextBlock Text="Get-Put Gap" VerticalAlignment="Center" Foreground="#2C405A" FontSize="13" Margin="0,0,12,0"/>
-                    <TextBox Text="{Binding Gap, UpdateSourceTrigger=PropertyChanged}" Width="80" FontSize="13" Margin="0,0,18,0"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="16,0,16,8">
-                    <!-- Hoist Pitch ... -->
-                    <TextBlock Text="Hoist Pitch" VerticalAlignment="Center" Foreground="#2C405A" FontSize="13" Margin="0,0,12,0"/>
-                    <TextBox Text="{Binding HoistPitchInput, UpdateSourceTrigger=PropertyChanged}" Width="443" FontSize="13" Margin="0"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="16,0,16,8">
-                    <!-- Profile Bay ... -->
-                    <TextBlock Text="Profile Bay" VerticalAlignment="Center" Foreground="#2C405A" FontSize="13" Margin="0,0,12,0"/>
-                    <TextBox Text="{Binding ProfileBayInput, UpdateSourceTrigger=PropertyChanged}" Width="445" FontSize="13" Margin="0"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="16,0,16,8">
-                    <!-- Other Level ... -->
-                    <TextBlock Text="Other Level" VerticalAlignment="Center" Foreground="#2C405A" FontSize="13" Margin="0,0,12,0"/>
-                    <TextBox Text="{Binding OtherLevelInput, UpdateSourceTrigger=PropertyChanged}" Width="440" FontSize="13" Margin="0"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="16,0,16,8">
-                    <!-- 총 Bank ... 맵 생성 버튼 -->
-                    <TextBlock Text="총 Bank" VerticalAlignment="Center" Foreground="#2C405A" FontWeight="Bold" FontSize="13" Margin="0,0,8,0"/>
-                    <TextBox Text="{Binding TotalBank, UpdateSourceTrigger=PropertyChanged}" Width="48" FontSize="13" Margin="0,0,18,0"/>
-                    <TextBlock Text="총 Bay" VerticalAlignment="Center" Foreground="#2C405A" FontWeight="Bold" FontSize="13" Margin="0,0,8,0"/>
-                    <TextBox Text="{Binding TotalBay, UpdateSourceTrigger=PropertyChanged}" Width="48" FontSize="13" Margin="0,0,18,0"/>
-                    <TextBlock Text="총 Level" VerticalAlignment="Center" Foreground="#2C405A" FontWeight="Bold" FontSize="13" Margin="0,0,8,0"/>
-                    <TextBox Text="{Binding TotalLevel, UpdateSourceTrigger=PropertyChanged}" Width="48" FontSize="13" Margin="0,0,18,0"/>
-                    <Button Content="맵 생성" Command="{Binding GenerateMapCommand}"
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <!-- 좌측: 기존 입력 영역 -->
+                    <ColumnDefinition Width="Auto"/>
+                    <!-- 우측: 저장/불러오기 패널 -->
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="16,14,16,8">
+                        <!-- Base Pitch ... -->
+                        <TextBlock Text="Base Pitch" VerticalAlignment="Center" Foreground="#2C405A" FontSize="13" Margin="0,0,12,0"/>
+                        <TextBox Text="{Binding BasePitch, UpdateSourceTrigger=PropertyChanged}" Width="80" FontSize="13" Margin="0,0,18,0"/>
+                        <TextBlock Text="Profile Pitch" VerticalAlignment="Center" Foreground="#2C405A" FontSize="13" Margin="0,0,12,0"/>
+                        <TextBox Text="{Binding ProfilePitch, UpdateSourceTrigger=PropertyChanged}" Width="80" FontSize="13" Margin="0,0,18,0"/>
+                        <TextBlock Text="Get-Put Gap" VerticalAlignment="Center" Foreground="#2C405A" FontSize="13" Margin="0,0,12,0"/>
+                        <TextBox Text="{Binding Gap, UpdateSourceTrigger=PropertyChanged}" Width="80" FontSize="13" Margin="0,0,18,0"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="16,0,16,8">
+                        <!-- Hoist Pitch ... -->
+                        <TextBlock Text="Hoist Pitch" VerticalAlignment="Center" Foreground="#2C405A" FontSize="13" Margin="0,0,12,0"/>
+                        <TextBox Text="{Binding HoistPitchInput, UpdateSourceTrigger=PropertyChanged}" Width="443" FontSize="13" Margin="0"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="16,0,16,8">
+                        <!-- Profile Bay ... -->
+                        <TextBlock Text="Profile Bay" VerticalAlignment="Center" Foreground="#2C405A" FontSize="13" Margin="0,0,12,0"/>
+                        <TextBox Text="{Binding ProfileBayInput, UpdateSourceTrigger=PropertyChanged}" Width="445" FontSize="13" Margin="0"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="16,0,16,8">
+                        <!-- Other Level ... -->
+                        <TextBlock Text="Other Level" VerticalAlignment="Center" Foreground="#2C405A" FontSize="13" Margin="0,0,12,0"/>
+                        <TextBox Text="{Binding OtherLevelInput, UpdateSourceTrigger=PropertyChanged}" Width="440" FontSize="13" Margin="0"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="16,0,16,8">
+                        <!-- 총 Bank ... 맵 생성 버튼 -->
+                        <TextBlock Text="총 Bank" VerticalAlignment="Center" Foreground="#2C405A" FontWeight="Bold" FontSize="13" Margin="0,0,8,0"/>
+                        <TextBox Text="{Binding TotalBank, UpdateSourceTrigger=PropertyChanged}" Width="48" FontSize="13" Margin="0,0,18,0"/>
+                        <TextBlock Text="총 Bay" VerticalAlignment="Center" Foreground="#2C405A" FontWeight="Bold" FontSize="13" Margin="0,0,8,0"/>
+                        <TextBox Text="{Binding TotalBay, UpdateSourceTrigger=PropertyChanged}" Width="48" FontSize="13" Margin="0,0,18,0"/>
+                        <TextBlock Text="총 Level" VerticalAlignment="Center" Foreground="#2C405A" FontWeight="Bold" FontSize="13" Margin="0,0,8,0"/>
+                        <TextBox Text="{Binding TotalLevel, UpdateSourceTrigger=PropertyChanged}" Width="48" FontSize="13" Margin="0,0,18,0"/>
+                        <Button Content="맵 생성" Command="{Binding GenerateMapCommand}"
                             Margin="0,0,0,0" Padding="20,5"
                             Background="#2264BC" Foreground="White"
                             BorderThickness="0" FontWeight="Bold" FontSize="13" Cursor="Hand"/>
+                    </StackPanel>
                 </StackPanel>
-            </StackPanel>
+
+                <!-- ===== 우측: 설정 저장/불러오기 패널 ===== -->
+                <Border Grid.Column="1" Margin="16,14,16,8" Background="#E9EEF8" CornerRadius="12" Padding="14" BorderBrush="#C9D5EA" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock Text="설정 저장 / 불러오기" FontWeight="Bold" FontSize="14" Foreground="#2C405A" Margin="0,0,0,10"/>
+                        <TextBlock Text="현재 입력된 모든 값(피치, Profile Bay, Other Level, 총 Bank/Bay/Level, 기준열 값들)을 JSON 파일로 저장하거나 다시 불러올 수 있습니다." 
+                           TextWrapping="Wrap" FontSize="12" Foreground="#3B4F6B" Margin="0,0,0,12"/>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <Button Content="설정 저장" Command="{Binding SavePresetCommand}" Padding="16,6" FontWeight="Bold" />
+                            <Button Content="설정 불러오기" Command="{Binding LoadPresetCommand}" Padding="16,6" FontWeight="Bold" Margin="8,0,0,0"/>
+                        </StackPanel>
+
+                        <TextBlock Text="최근 파일" FontSize="12" Foreground="#586E8C"/>
+                        <TextBlock Text="{Binding LastPresetPath}" FontSize="11" Foreground="#334D80" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+            </Grid>
         </Border>
 
          <!-- 6. Bank별 기준값 DataGrid (RowSpan, Margin/Height 정리) -->

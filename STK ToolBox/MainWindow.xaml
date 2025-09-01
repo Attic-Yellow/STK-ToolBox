@@ -15,8 +15,8 @@
         Icon="pack://application:,,,/app_icon_transparent.ico">  
 
     <Grid>  
-        <Grid.RowDefinitions>  
-            <RowDefinition Height="Auto"/>  
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <!-- 메뉴 -->  
             <RowDefinition Height="Auto"/>  
             <!-- 탭 -->  
@@ -25,11 +25,11 @@
         </Grid.RowDefinitions>  
 
         <!-- 상단 메뉴 -->  
-        <Menu Grid.Row="0" Height="28">  
+        <!-- <Menu Grid.Row="0" Height="28">  
             <MenuItem Header="_파일(F)" />  
             <MenuItem Header="창(W)" />  
             <MenuItem Header="도움말(H)" />  
-        </Menu>  
+        </Menu>  -->
 
         <!-- 탭바 -->  
         <mah:MetroAnimatedSingleRowTabControl  

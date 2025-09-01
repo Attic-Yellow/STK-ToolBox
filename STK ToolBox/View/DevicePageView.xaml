@@ -111,11 +111,11 @@
                                     </TabItem>
                                     
                                     <!-- Inverter (CC-Link -->
-                                    <TabItem Header="Inverter">
+                                   <!-- <TabItem Header="Inverter">
                                         <Border Background="White" CornerRadius="10" Padding="15" Margin="5">
                                             <ConLayOut:InverterControl />
                                         </Border>
-                                    </TabItem>
+                                    </TabItem> -->
                                 </Controls:MetroTabControl>
 
                             </avalonDock:LayoutAnchorable>
