@@ -280,7 +280,7 @@ namespace STK_ToolBox.ViewModels
                                                 foreach (ManagementObject os in searcher.Get())
                                                 {
                                                     var current = ManagementDateTimeConverter.ToDateTime(os["LocalDateTime"].ToString());
-                                                    time = current.ToString("yyyy-MM-dd HH:mm:ss");
+                                                    time = current.ToString("yyyy-MM-dd HH:mm");
                                                 }
                                             }
                                         }

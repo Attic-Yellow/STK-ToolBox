@@ -1,0 +1,1 @@
+msbuild "STK ToolBox.csproj" /t:BumpVersion /p:Part=Build;Step=1
