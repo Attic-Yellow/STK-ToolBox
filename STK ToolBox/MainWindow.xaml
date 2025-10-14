@@ -5,33 +5,35 @@
         xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"  
         xmlns:avalonDock="https://github.com/Dirkster99/AvalonDock"  
         xmlns:view="clr-namespace:STK_ToolBox.View"  
-        xmlns:vm="clr-namespace:STK_ToolBox.ViewModels"  
+        xmlns:vm="clr-namespace:STK_ToolBox.ViewModels" 
+        xmlns:common="clr-namespace:STK_ToolBox.Common;assembly=STK_ToolBox"
         Title="STK 도구 모음"  
         Height="900"  
         Width="1600"  
         WindowStartupLocation="CenterScreen"  
         ResizeMode="CanResizeWithGrip"  
         GlowBrush="{DynamicResource MahApps.Brushes.Accent}"
-        Icon="pack://application:,,,/app_icon_transparent.ico">  
+        Icon="pack://application:,,,/app_icon_transparent.ico">
 
-    <Grid>  
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <!-- 메뉴 -->  
-            <RowDefinition Height="Auto"/>  
-            <!-- 탭 -->  
-            <RowDefinition Height="*"/>  
-            <!-- 메인/도킹/툴바 -->  
-        </Grid.RowDefinitions>  
+            <!-- 메뉴 -->
+            <RowDefinition Height="Auto"/>
+            <!-- 탭 -->
+            <RowDefinition Height="*"/>
+            <!-- 메인/도킹/툴바 -->
+        </Grid.RowDefinitions>
 
-        <!-- 상단 메뉴 -->  
-        <!-- <Menu Grid.Row="0" Height="28">  
+        <!-- 상단 메뉴 (현재 미사용)
+        <Menu Grid.Row="0" Height="28">  
             <MenuItem Header="_파일(F)" />  
             <MenuItem Header="창(W)" />  
             <MenuItem Header="도움말(H)" />  
-        </Menu>  -->
+        </Menu>  
+        -->
 
-        <!-- 탭바 -->  
+        <!-- 탭바 -->
         <mah:MetroAnimatedSingleRowTabControl  
             x:Name="MenuTabControl"  
             Grid.Row="1"  
@@ -39,10 +41,10 @@
             SelectionChanged="MenuTabControl_SelectionChanged"  
             HorizontalAlignment="Stretch"  
             VerticalAlignment="Top"  
-            Height="44">  
+            Height="44">
             <TabItem Header="Teaching"  
                      x:Name="TeachingTab"  
-                     PreviewMouseLeftButtonDown="TabItem_PreviewMouseLeftButtonDown"/>  
+                     PreviewMouseLeftButtonDown="TabItem_PreviewMouseLeftButtonDown"/>
             <TabItem Header="Parameter"  
                      x:Name="ParameterTab"  
                      PreviewMouseLeftButtonDown="TabItem_PreviewMouseLeftButtonDown"/>
@@ -50,6 +52,32 @@
                      x:Name="DeviceTab"
                      PreviewMouseLeftButtonDown="TabItem_PreviewMouseLeftButtonDown"/>
         </mah:MetroAnimatedSingleRowTabControl>
+
+        <!-- 탭과 같은 높이에 맞춘 우상단 정보 표시(버전 • 빌드 • 제작자) -->
+        <Border Grid.Row="1"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Margin="0,3,14,0"
+                CornerRadius="8"
+                Background="#F9FFFFFF"
+                BorderBrush="#22000000"
+                BorderThickness="1"
+                IsHitTestVisible="False"
+                Height="{Binding ElementName=MenuTabControl, Path=Height}">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="8" ShadowDepth="0" Opacity="0.20"/>
+            </Border.Effect>
+            
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" >
+                <TextBlock Text="{x:Static common:VersionInfo.Display}"
+                           VerticalAlignment="Center"
+                           FontSize="12"
+                           Foreground="#CC0E4C92"
+                           FontWeight="SemiBold"
+                           TextTrimming="CharacterEllipsis"
+                           Margin="8,0,8,0"/>
+            </StackPanel>
+        </Border>
 
         <!-- 메인 컨텐츠 + 도킹 영역 -->
         <Grid Grid.Row="2">
@@ -64,6 +92,7 @@
             <ContentControl x:Name="TeachingContent" Visibility="Collapsed"/>
             <ContentControl x:Name="ParameterContent" Visibility="Collapsed"/>
             <ContentControl x:Name="DeviceContent" Visibility="Collapsed"/>
+
             <!-- AvalonDock (도킹 로그/툴바 용) -->
             <avalonDock:DockingManager x:Name="MainDockManager"  
                                        Grid.Column="1"
@@ -76,6 +105,18 @@
                     </avalonDock:LayoutPanel>
                 </avalonDock:LayoutRoot>
             </avalonDock:DockingManager>
+
+            <!-- 좌하단 워터마크 (요청: 좌측 아래, 폰트 크기 24) -->
+            <TextBlock Grid.ColumnSpan="2"
+                       Text="{x:Static common:VersionInfo.Watermark}"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Bottom"
+                       Margin="12"
+                       FontSize="24"
+                       FontWeight="Black"
+                       Foreground="#FF000000"
+                       Opacity="0.06"
+                       IsHitTestVisible="False"/>
         </Grid>
-    </Grid>  
+    </Grid>
 </Controls:MetroWindow>
