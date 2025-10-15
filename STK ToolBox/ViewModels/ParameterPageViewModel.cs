@@ -1,4 +1,7 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.IO;
@@ -9,7 +12,7 @@ namespace STK_ToolBox.ViewModels
 {
     public class ParameterPageViewModel : INotifyPropertyChanged
     {
-        private bool _syncing; // ← 순환 업데이트 방지
+        private bool _syncing;
 
         private string _iniPath = @"D:\LBS_DB\ServoParameter.ini";
         public string IniPath
@@ -20,7 +23,6 @@ namespace STK_ToolBox.ViewModels
                 if (_iniPath == value) return;
                 _iniPath = value;
                 OnPropertyChanged();
-                // 자식 VM에 전파
                 LimitVM.IniPath = value;
                 OriginVM.IniPath = value;
             }
@@ -36,7 +38,6 @@ namespace STK_ToolBox.ViewModels
                 _axisCount = value;
                 OnPropertyChanged();
                 BuildAxisList(value);
-                // 자식 VM에 전파
                 LimitVM.AxisCount = value;
                 OriginVM.AxisCount = value;
             }
@@ -51,7 +52,6 @@ namespace STK_ToolBox.ViewModels
                 if (_selectedAxis == value) return;
                 _selectedAxis = value;
                 OnPropertyChanged();
-                // 자식 VM에 전파
                 LimitVM.SelectedAxis = value;
                 OriginVM.SelectedAxis = value;
             }
@@ -62,14 +62,43 @@ namespace STK_ToolBox.ViewModels
         public LimitCalculatorViewModel LimitVM { get; } = new LimitCalculatorViewModel();
         public OriginAxisViewModel OriginVM { get; } = new OriginAxisViewModel();
 
-        // ⬇⬇ 추가: 찾아보기 커맨드
+        // ===== 백업 설정 =====
+        private string _backupDirectory;
+        public string BackupDirectory
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(_backupDirectory))
+                {
+                    try
+                    {
+                        var baseDir = string.IsNullOrWhiteSpace(IniPath) ? null : Path.GetDirectoryName(IniPath);
+                        if (!string.IsNullOrWhiteSpace(baseDir))
+                            return Path.Combine(baseDir, "Backup");
+                    }
+                    catch { }
+                }
+                return _backupDirectory;
+            }
+            set { _backupDirectory = value; OnPropertyChanged(); }
+        }
+
+        private int _maxBackupFiles = 20; // 0 = 무제한
+        public int MaxBackupFiles
+        {
+            get => _maxBackupFiles;
+            set { _maxBackupFiles = Math.Max(0, value); OnPropertyChanged(); }
+        }
+
+        // ===== 커맨드 =====
         public ICommand BrowseCommand { get; }
+        public ICommand BackupCommand { get; }
+        public ICommand OpenBackupFolderCommand { get; }
 
         public ParameterPageViewModel()
         {
             BuildAxisList(AxisCount);
 
-            // 초기 전파 (부모 → 자식)
             LimitVM.IniPath = IniPath;
             LimitVM.AxisCount = AxisCount;
             LimitVM.SelectedAxis = SelectedAxis;
@@ -78,11 +107,12 @@ namespace STK_ToolBox.ViewModels
             OriginVM.AxisCount = AxisCount;
             OriginVM.SelectedAxis = SelectedAxis;
 
-            // ⬇⬇ 자식 변화 구독 (자식 → 부모)
             LimitVM.PropertyChanged += ChildVM_PropertyChanged;
             OriginVM.PropertyChanged += ChildVM_PropertyChanged;
 
             BrowseCommand = new RelayCommand(() => OpenBrowseDialog());
+            BackupCommand = new RelayCommand(() => BackupIniFile());
+            OpenBackupFolderCommand = new RelayCommand(() => OpenBackupFolder());
         }
 
         private void OpenBrowseDialog()
@@ -94,7 +124,7 @@ namespace STK_ToolBox.ViewModels
             };
             if (dlg.ShowDialog() == true)
             {
-                IniPath = dlg.FileName; // setter에서 자식 VM들로 전파됨
+                IniPath = dlg.FileName;
             }
         }
 
@@ -117,7 +147,7 @@ namespace STK_ToolBox.ViewModels
         {
             AxisList.Clear();
             for (int i = 1; i <= count; i++)
-                AxisList.Add($"AXIS_{i}");
+                AxisList.Add("AXIS_" + i);
             if (AxisList.Count > 0 && !AxisList.Contains(SelectedAxis))
                 SelectedAxis = AxisList[0];
         }
@@ -128,7 +158,10 @@ namespace STK_ToolBox.ViewModels
             _syncing = true;
             try
             {
-                if (sender is LimitCalculatorViewModel lvm)
+                var lvm = sender as LimitCalculatorViewModel;
+                var ovm = sender as OriginAxisViewModel;
+
+                if (lvm != null)
                 {
                     switch (e.PropertyName)
                     {
@@ -143,7 +176,7 @@ namespace STK_ToolBox.ViewModels
                             break;
                     }
                 }
-                else if (sender is OriginAxisViewModel ovm)
+                else if (ovm != null)
                 {
                     switch (e.PropertyName)
                     {
@@ -162,6 +195,95 @@ namespace STK_ToolBox.ViewModels
             finally
             {
                 _syncing = false;
+            }
+        }
+
+        // ===== 백업 =====
+        private void BackupIniFile()
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(IniPath) || !File.Exists(IniPath))
+                {
+                    System.Windows.MessageBox.Show("유효한 INI 파일이 없습니다.");
+                    return;
+                }
+
+                var backupDir = BackupDirectory;
+                if (string.IsNullOrWhiteSpace(backupDir))
+                {
+                    System.Windows.MessageBox.Show("백업 폴더를 결정할 수 없습니다.");
+                    return;
+                }
+                Directory.CreateDirectory(backupDir);
+
+                var srcNameNoExt = Path.GetFileNameWithoutExtension(IniPath);
+                var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                var dstName = string.Format("{0}_{1}.ini", srcNameNoExt, timestamp);
+                var dstFull = Path.Combine(backupDir, dstName);
+
+                int seq = 1;
+                while (File.Exists(dstFull))
+                {
+                    dstName = string.Format("{0}_{1}_{2}.ini", srcNameNoExt, timestamp, seq);
+                    dstFull = Path.Combine(backupDir, dstName);
+                    seq++;
+                }
+
+                File.Copy(IniPath, dstFull, false);
+
+                if (MaxBackupFiles > 0)
+                    EnforceBackupRetention(backupDir, srcNameNoExt, MaxBackupFiles);
+
+                System.Windows.MessageBox.Show("백업 완료:\n" + dstFull);
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show("백업 오류: " + ex.Message);
+            }
+        }
+
+        private void EnforceBackupRetention(string backupDir, string srcNameNoExt, int maxKeep)
+        {
+            try
+            {
+                var patternPrefix = srcNameNoExt + "_";
+                var files = new DirectoryInfo(backupDir)
+                    .GetFiles("*.ini", SearchOption.TopDirectoryOnly)
+                    .Where(f => f.Name.StartsWith(patternPrefix, StringComparison.OrdinalIgnoreCase))
+                    .OrderByDescending(f => f.CreationTimeUtc)
+                    .ToList();
+
+                if (files.Count <= maxKeep) return;
+
+                foreach (var f in files.Skip(maxKeep))
+                {
+                    try { f.Delete(); } catch { }
+                }
+            }
+            catch { }
+        }
+
+        private void OpenBackupFolder()
+        {
+            try
+            {
+                var backupDir = BackupDirectory;
+                if (string.IsNullOrWhiteSpace(backupDir))
+                {
+                    System.Windows.MessageBox.Show("백업 폴더를 결정할 수 없습니다.");
+                    return;
+                }
+                Directory.CreateDirectory(backupDir);
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = backupDir,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show("폴더 열기 오류: " + ex.Message);
             }
         }
 
