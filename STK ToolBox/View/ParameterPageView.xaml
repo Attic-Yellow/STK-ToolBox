@@ -37,18 +37,39 @@
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <!-- INI -->
+                                    <!-- INI / 백업 -->
                                     <GroupBox Header="INI 파일" Margin="0,0,8,0">
-                                        <DockPanel LastChildFill="True" Margin="8">
-                                            <TextBlock Text="INI 경로:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                            <TextBox Text="{Binding IniPath, UpdateSourceTrigger=LostFocus}"
-                                                     Width="350" IsReadOnly="True" DockPanel.Dock="Left" Margin="0,12,8,12"
-                                                     FontSize="14"/>
-                                            <!-- ⬇⬇ 추가: 찾아보기 버튼 -->
-                                            <Button Content="찾아보기" Width="100" Height="28"
-                                                    Command="{Binding BrowseCommand}"
-                                                    ToolTip="INI 파일 경로를 찾아서 선택하세요." />
-                                        </DockPanel>
+                                        <Grid Margin="8">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <!-- ① INI 경로 + 찾아보기 -->
+                                            <DockPanel LastChildFill="True" Grid.Row="0" Margin="0,0,0,6">
+                                                <TextBlock Text="INI 경로:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                <TextBox Text="{Binding IniPath, UpdateSourceTrigger=PropertyChanged}"
+                                                         Width="350" IsReadOnly="True" DockPanel.Dock="Left"
+                                                         Margin="10,12,8,12" FontSize="14"/>
+                                                <Button Content="찾아보기" Width="80" Height="28" FontSize="12" Margin="0,0,25,0"
+                                                        Command="{Binding BrowseCommand}"
+                                                        ToolTip="INI 파일 경로를 찾아서 선택하세요."/>
+                                            </DockPanel>
+
+                                            <!-- ② 백업 폴더 경로 + 찾아보기 + 동작 버튼 -->
+                                            <DockPanel LastChildFill="True" Grid.Row="1">
+                                                <TextBlock Text="백업 경로:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                                <TextBox Text="{Binding BackupDirectory, UpdateSourceTrigger=PropertyChanged}"
+                                                         Width="350" IsReadOnly="True" DockPanel.Dock="Left"
+                                                         Margin="0,12,8,12" FontSize="14"/>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Button Content="INI 백업" Width="80" Height="28" FontSize="12" Margin="8,0,0,0"
+                                                            Command="{Binding BackupCommand}" />
+                                                    <Button Content="백업 폴더 열기" Width="80" Height="28" FontSize="10" Margin="8,0,0,0"
+                                                            Command="{Binding OpenBackupFolderCommand}" />
+                                                </StackPanel>
+                                            </DockPanel>
+                                        </Grid>
                                     </GroupBox>
 
                                     <!-- AXIS -->

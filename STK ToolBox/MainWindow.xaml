@@ -59,8 +59,8 @@
                 VerticalAlignment="Top"
                 Margin="0,3,14,0"
                 CornerRadius="8"
-                Background="#F9FFFFFF"
-                BorderBrush="#22000000"
+                Background="#B7F0B1"
+                BorderBrush="#86E57F"
                 BorderThickness="1"
                 IsHitTestVisible="False"
                 Height="{Binding ElementName=MenuTabControl, Path=Height}">
