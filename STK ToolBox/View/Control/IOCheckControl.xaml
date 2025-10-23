@@ -1,0 +1,90 @@
+﻿<!-- View/IOCheckControl.xaml -->
+<UserControl x:Class="STK_ToolBox.View.IOCheckControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:STK_ToolBox.ViewModels">
+
+    <!-- DataContext가 상위(TeachingPageView)에서 주입되지 않는다면 아래 주석 해제
+    <UserControl.DataContext>
+        <vm:IOCheckViewModel/>
+    </UserControl.DataContext>
+    -->
+
+    <UserControl.Resources>
+        <!-- 민트 -->
+        <SolidColorBrush x:Key="MintBrush" Color="#2DD4BF"/>
+
+        <!-- IOName: CurrentState==true(1)이면 민트 -->
+        <Style x:Key="IoNameStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding CurrentState}" Value="True">
+                    <Setter Property="Foreground" Value="{StaticResource MintBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- 토글 버튼 텍스트 바꿈 -->
+        <Style x:Key="ToggleBtnStyle" TargetType="Button">
+            <Setter Property="Padding" Value="8,2"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding CurrentState}" Value="True">
+                    <Setter Property="Content" Value="Turn OFF"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding CurrentState}" Value="False">
+                    <Setter Property="Content" Value="Turn ON"/>
+                </DataTrigger>
+                <!-- X 입력이면 비활성화 -->
+                <DataTrigger Binding="{Binding CanToggle}" Value="False">
+                    <Setter Property="IsEnabled" Value="False"/>
+                    <Setter Property="Opacity" Value="0.5"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+            <Button Content="Refresh" Command="{Binding RefreshCommand}" Margin="0,0,10,0"/>
+            <Button Content="Save State" Command="{Binding SaveCommand}"/>
+        </StackPanel>
+
+        <DataGrid Grid.Row="1" ItemsSource="{Binding IOList}" AutoGenerateColumns="False"
+                  HeadersVisibility="Column" IsReadOnly="False" GridLinesVisibility="Horizontal">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Addr" Binding="{Binding Address}" Width="90"/>
+
+                <DataGridTextColumn Header="IO Name" Binding="{Binding IOName}" Width="*">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource IoNameStyle}"/>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Header="Unit"       Binding="{Binding Unit}"       Width="140"/>
+                <DataGridTextColumn Header="DetailUnit" Binding="{Binding DetailUnit}" Width="140"/>
+
+                <!-- 현재 상태 표시(읽기전용) -->
+                <DataGridCheckBoxColumn Header="State" Binding="{Binding CurrentState}" IsReadOnly="True" Width="70"/>
+
+                <!-- 프로그램에서 출력 토글 -->
+                <DataGridTemplateColumn Header="Output" Width="110">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Style="{StaticResource ToggleBtnStyle}"
+                                    Command="{Binding DataContext.ToggleOutputCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                    CommandParameter="{Binding}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- 수동 체크 기록 -->
+                <DataGridCheckBoxColumn Header="Checked" Binding="{Binding IsChecked}" Width="80"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

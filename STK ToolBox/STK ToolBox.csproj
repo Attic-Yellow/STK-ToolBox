@@ -15,9 +15,11 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
     <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -27,7 +29,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -86,6 +88,9 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System.Data" />
+    <Reference Include="System.Data.SQLite, Version=1.0.119.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <HintPath>..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\lib\net46\System.Data.SQLite.dll</HintPath>
+    </Reference>
     <Reference Include="System.Diagnostics.DiagnosticSource, Version=4.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Diagnostics.DiagnosticSource.4.0.0\lib\net46\System.Diagnostics.DiagnosticSource.dll</HintPath>
     </Reference>
@@ -227,16 +232,16 @@
     <Compile Include="Common\VersionInfo.cs" />
     <Compile Include="Helpers\BooleanToBrushConverter.cs" />
     <Compile Include="Helpers\DeadCellTooltipConverter.cs" />
-    <Compile Include="Helpers\ErrorShortener.cs" />
-    <Compile Include="Helpers\InverterViaPlcController.cs" />
-    <Compile Include="Helpers\IPlcClient.cs" />
+    <Compile Include="Helpers\JsonStorageHelper.cs" />
     <Compile Include="Helpers\Log.cs" />
-    <Compile Include="Helpers\MxComponentClient.cs" />
+    <Compile Include="Helpers\MdFunc32Wrapper.cs" />
     <Compile Include="Helpers\NullToVisibilityConverter.cs" />
+    <Compile Include="Models\IOMonitorItem.cs" />
+    <Compile Include="ViewModels\BaseSource\BaseViewModel.cs" />
     <Compile Include="ViewModels\CameraViewModel.cs" />
     <Compile Include="ViewModels\CellViewModel.cs" />
     <Compile Include="ViewModels\CredentialStore.cs" />
-    <Compile Include="ViewModels\InverterDriveMxViewModel.cs" />
+    <Compile Include="ViewModels\IOCheckViewModel.cs" />
     <Compile Include="ViewModels\LimitCaculatorViewModel.cs" />
     <Compile Include="ViewModels\OriginAxisViewModel.cs" />
     <Compile Include="ViewModels\ParameterPageViewModel.cs" />
@@ -246,8 +251,8 @@
     <Compile Include="View\Control\CameraControl.xaml.cs">
       <DependentUpon>CameraControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="View\Control\InverterControl.xaml.cs">
-      <DependentUpon>InverterControl.xaml</DependentUpon>
+    <Compile Include="View\Control\IOCheckControl.xaml.cs">
+      <DependentUpon>IOCheckControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="View\Control\OriginAxisControl.xaml.cs">
       <DependentUpon>OriginAxisControl.xaml</DependentUpon>
@@ -293,7 +298,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="View\Control\InverterControl.xaml">
+    <Page Include="View\Control\IOCheckControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -368,7 +373,7 @@
   <!-- ===== (A) BuildInfo.g.cs 생성: 최대한 이르게 생성 ===== -->
   <Target Name="GenerateBuildInfo_Early" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
-      <BuildTime>$([System.DateTime]::Now.ToString("yyyy-MM-dd HH:mm"))</BuildTime>
+      <BuildTime>$([System.DateTime]::Now.ToString("yyyy-MM-dd"))</BuildTime>
       <GenDir>$(IntermediateOutputPath)Generated</GenDir>
       <BuildInfoFile>$(GenDir)\BuildInfo.g.cs</BuildInfoFile>
       <BuildInfoNamespace>STK_ToolBox.Common</BuildInfoNamespace>
@@ -471,5 +476,12 @@
       <Output TaskParameter="Current" PropertyName="OldVersion" />
     </BumpVersionTask>
     <Message Text="Version bumped: $(OldVersion) → $(NewVersion) (Part=$(Part), Step=$(Step))" Importance="High" />
+  </Target>
+  <Import Project="..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets" Condition="Exists('..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>이 프로젝트는 이 컴퓨터에 없는 NuGet 패키지를 참조합니다. 해당 패키지를 다운로드하려면 NuGet 패키지 복원을 사용하십시오. 자세한 내용은 http://go.microsoft.com/fwlink/?LinkID=322105를 참조하십시오. 누락된 파일은 {0}입니다.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Stub.System.Data.SQLite.Core.NetFramework.1.0.119.0\build\net46\Stub.System.Data.SQLite.Core.NetFramework.targets'))" />
   </Target>
 </Project>
