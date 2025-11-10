@@ -1,4 +1,8 @@
-﻿using System;
+﻿using Microsoft.VisualBasic;
+using Microsoft.Xaml.Behaviors;
+using STK_ToolBox.Helpers;
+using STK_ToolBox.Models;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data.SQLite;
@@ -9,8 +13,6 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
-using STK_ToolBox.Helpers;
-using STK_ToolBox.Models;
 
 namespace STK_ToolBox.ViewModels
 {
@@ -48,6 +50,7 @@ namespace STK_ToolBox.ViewModels
         public ICommand LoadStateCommand { get; }
         public ICommand HelpCommand { get; }
         public ICommand ToggleOutputCommand { get; }
+        public ICommand OpenNoteCommand { get; }
 
         // Config / Paths
         private readonly string DbPath = @"D:\LBS_DB\LBSControl.db3";
@@ -57,10 +60,12 @@ namespace STK_ToolBox.ViewModels
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "STK_ToolBox");
         private readonly string _stateFile;
 
+        // 메모 저장소 (키: See GetKey)
+        private readonly Dictionary<string, string> _notes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
         // 폴링 타이머
         private readonly DispatcherTimer _pollTimer;
 
-        // Ctor
         public IOCheckViewModel()
         {
             _stateFile = Path.Combine(_stateDir, "io_check_state.csv");
@@ -70,6 +75,7 @@ namespace STK_ToolBox.ViewModels
             LoadStateCommand = new RelayCommand(() => LoadSavedStates());
             HelpCommand = new RelayCommand(() => ShowHelp());
             ToggleOutputCommand = new RelayCommand<IOMonitorItem>(ToggleOutput, it => it?.CanToggle == true);
+            OpenNoteCommand = new RelayCommand<IOMonitorItem>(OpenNote);
 
             // 데이터 로드 → 보드 연결 → 폴링 시작
             LoadIOStatus();
@@ -78,6 +84,25 @@ namespace STK_ToolBox.ViewModels
             _pollTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
             _pollTimer.Tick += (s, e) => PollVisibleItems();
             _pollTimer.Start();
+        }
+
+        // 메모 입력/수정
+        private void OpenNote(IOMonitorItem item)
+        {
+            if (item == null) return;
+            var key = GetKey(item);
+            _notes.TryGetValue(key, out var current);
+
+            var result = NotePrompt.Show("특이사항 코멘트 입력창",
+                                         "해당 I/O 항목에 대한 메모를 입력하세요.\r\n빈 칸으로 저장하면 메모가 삭제됩니다.",
+                                         current ?? string.Empty);
+            if (result == null) return;           // 취소
+            var text = result.Trim();
+
+            if (string.IsNullOrEmpty(text))
+                _notes.Remove(key);
+            else
+                _notes[key] = text;
         }
 
         // CC-Link 토글
@@ -142,13 +167,11 @@ namespace STK_ToolBox.ViewModels
                             int detIdx = Find("DetailUnit", "detailunit", "detailUnit");
                             int dscIdx = Find("Description", "Desc", "Remark", "Remarks");
 
-                            var address = Read(addrIdx);
-
                             IOList.Add(new IOMonitorItem
                             {
                                 Id = (idIdx >= 0 && !reader.IsDBNull(idIdx)) ? Convert.ToInt32(reader.GetValue(idIdx)) : 0,
                                 IOName = Read(nameIdx),
-                                Address = address,
+                                Address = Read(addrIdx),
                                 Unit = Read(unitIdx),
                                 DetailUnit = Read(detIdx),
                                 Description = Read(dscIdx),
@@ -158,7 +181,7 @@ namespace STK_ToolBox.ViewModels
                     }
                 }
 
-                // 체크 상태 복원
+                // 체크/메모 상태 복원
                 LoadSavedStates(silent: true);
 
                 // 탭 재구성(DetailUnit 순서 유지, 32개/탭)
@@ -173,7 +196,7 @@ namespace STK_ToolBox.ViewModels
             }
         }
 
-        // 저장/불러오기(CSV: Id,Address,IOName,IsChecked)
+        // 저장/불러오기(CSV: Id,Address,IOName,IsChecked,Note)
         private void SaveStates()
         {
             try
@@ -182,13 +205,18 @@ namespace STK_ToolBox.ViewModels
                     Directory.CreateDirectory(_stateDir);
 
                 var sb = new StringBuilder();
-                sb.AppendLine("Id,Address,IOName,IsChecked");
+                sb.AppendLine("Id,Address,IOName,IsChecked,Note");
                 foreach (var it in IOList)
                 {
                     var idPart = it.Id;
                     var addrPart = (it.Address ?? "").Replace(",", "");
                     var namePart = (it.IOName ?? "").Replace(",", "");
-                    sb.AppendLine($"{idPart},{addrPart},{namePart},{it.IsChecked}");
+                    var isChecked = it.IsChecked;
+                    var note = "";
+                    _notes.TryGetValue(GetKey(it), out note);
+                    note = (note ?? "").Replace("\r", " ").Replace("\n", " ").Replace(",", "，"); // CSV 안전
+
+                    sb.AppendLine($"{idPart},{addrPart},{namePart},{isChecked},{note}");
                 }
 
                 File.WriteAllText(_stateFile, sb.ToString(), Encoding.UTF8);
@@ -212,21 +240,29 @@ namespace STK_ToolBox.ViewModels
                 }
 
                 var lines = File.ReadAllLines(_stateFile, Encoding.UTF8);
-                int applied = 0;
+                int appliedCheck = 0, appliedNote = 0;
 
                 foreach (var line in lines.Skip(1))
                 {
                     if (string.IsNullOrWhiteSpace(line)) continue;
-                    var parts = line.Split(',');
-                    if (parts.Length < 4) continue;
 
-                    int.TryParse(parts[0], out var id);
-                    var addr = parts[1]?.Trim() ?? "";
-                    var name = parts[2]?.Trim() ?? "";
-                    if (!bool.TryParse(parts[3], out var isChecked)) continue;
+                    // 쉼표가 들어갈 수 있는 Note를 위해 1~4열까지만 Split, 나머지는 Note로 취급
+                    var raw = line.Split(',');
+                    if (raw.Length < 4) continue;
 
+                    // 앞 4개는 고정
+                    int.TryParse(raw[0], out var id);
+                    var addr = (raw[1] ?? "").Trim();
+                    var name = (raw[2] ?? "").Trim();
+                    bool.TryParse(raw[3], out var isChecked);
+
+                    // 5번째 이후는 Note 원문(과거 호환 위해 없을 수 있음)
+                    string note = null;
+                    if (raw.Length >= 5)
+                        note = string.Join(",", raw.Skip(4)).Trim(); // CSV에서 ,를 ‘，’로 저장했으므로 그대로 결합
+
+                    // 매칭
                     IOMonitorItem target = null;
-
                     if (id != 0)
                         target = IOList.FirstOrDefault(x => x.Id == id);
 
@@ -238,12 +274,20 @@ namespace STK_ToolBox.ViewModels
                     if (target != null)
                     {
                         target.IsChecked = isChecked;
-                        applied++;
+                        appliedCheck++;
+
+                        var key = GetKey(target);
+                        if (!string.IsNullOrEmpty(note))
+                        {
+                            // 저장 시 개행/콤마 정리했으므로 그대로 탑재
+                            _notes[key] = note;
+                            appliedNote++;
+                        }
                     }
                 }
 
                 if (!silent)
-                    MessageBox.Show($"불러오기 완료: {applied}개 적용\n{_stateFile}",
+                    MessageBox.Show($"불러오기 완료: 체크 {appliedCheck}개, 메모 {appliedNote}개 적용\n{_stateFile}",
                         "불러오기", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
@@ -302,10 +346,11 @@ namespace STK_ToolBox.ViewModels
             var msg =
 @"I/O 모니터 사용법
 
-• 저장/불러오기: Checked 상태를 CSV로 저장/적용.
+• 저장/불러오기: Checked 상태와 메모(Note)을 CSV로 저장/적용.
 • 탭: DetailUnit 순서 그대로, 한 탭에 32개(좌16/우16) 표시.
 • Output: Y 주소(출력)만 토글 가능.
 • Checked: 체크 시 행 배경이 강조됩니다.
+• 메모: 각 행의 '메모' 버튼으로 메모 작성/수정/삭제.
 
 저장 파일: " + StateFilePath;
             MessageBox.Show(msg, "도움말 — I/O Monitor", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -390,6 +435,16 @@ namespace STK_ToolBox.ViewModels
             {
                 // 폴링 중 예외는 무시(안전)
             }
+        }
+
+        // ★ 메모 키 (Id 우선, 없으면 Address|IOName)
+        private static string GetKey(IOMonitorItem it)
+        {
+            if (it == null) return "";
+            if (it.Id != 0) return $"ID:{it.Id}";
+            var addr = it.Address ?? "";
+            var name = it.IOName ?? "";
+            return $"AK:{addr}|{name}";
         }
     }
 

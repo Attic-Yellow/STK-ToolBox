@@ -227,6 +227,7 @@
     <Compile Include="Helpers\JsonStorageHelper.cs" />
     <Compile Include="Helpers\Log.cs" />
     <Compile Include="Helpers\MdFunc32Wrapper.cs" />
+    <Compile Include="Helpers\NotePrompt.cs" />
     <Compile Include="Helpers\NullToVisibilityConverter.cs" />
     <Compile Include="Models\IOMonitorItem.cs" />
     <Compile Include="ViewModels\BaseSource\BaseViewModel.cs" />
