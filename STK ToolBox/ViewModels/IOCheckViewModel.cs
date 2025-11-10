@@ -16,7 +16,7 @@ namespace STK_ToolBox.ViewModels
 {
     public class IOCheckViewModel : BaseViewModel
     {
-        // ── Public Bindings ─────────────────────────────────────────
+        // Public Bindings
         public ObservableCollection<IOMonitorItem> IOList { get; } = new ObservableCollection<IOMonitorItem>();
         public ObservableCollection<TabPageVM> Tabs { get; } = new ObservableCollection<TabPageVM>();
 
@@ -42,14 +42,14 @@ namespace STK_ToolBox.ViewModels
         // 상태 파일 경로(UI 표시)
         public string StateFilePath => _stateFile;
 
-        // ── Commands ────────────────────────────────────────────────
+        // Commands
         public ICommand RefreshCommand { get; }
         public ICommand SaveCommand { get; }
         public ICommand LoadStateCommand { get; }
         public ICommand HelpCommand { get; }
         public ICommand ToggleOutputCommand { get; }
 
-        // ── Config / Paths ─────────────────────────────────────────
+        // Config / Paths
         private readonly string DbPath = @"D:\LBS_DB\LBSControl.db3";
         private readonly int _stationNo = 0; // CC-Link Station 번호
 
@@ -60,7 +60,7 @@ namespace STK_ToolBox.ViewModels
         // 폴링 타이머
         private readonly DispatcherTimer _pollTimer;
 
-        // ── Ctor ───────────────────────────────────────────────────
+        // Ctor
         public IOCheckViewModel()
         {
             _stateFile = Path.Combine(_stateDir, "io_check_state.csv");
@@ -80,7 +80,7 @@ namespace STK_ToolBox.ViewModels
             _pollTimer.Start();
         }
 
-        // ── CC-Link 토글 ───────────────────────────────────────────
+        // CC-Link 토글
         private void ToggleOutput(IOMonitorItem item)
         {
             if (item == null || !item.CanToggle) return;
@@ -101,7 +101,7 @@ namespace STK_ToolBox.ViewModels
                     "I/O 출력", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
 
-        // ── DB 로드 + 상태 반영 ────────────────────────────────────
+        // DB 로드 + 상태 반영
         private void LoadIOStatus()
         {
             IOList.Clear();
@@ -173,7 +173,7 @@ namespace STK_ToolBox.ViewModels
             }
         }
 
-        // ── 저장/불러오기(CSV: Id,Address,IOName,IsChecked) ─────────
+        // 저장/불러오기(CSV: Id,Address,IOName,IsChecked)
         private void SaveStates()
         {
             try
@@ -253,7 +253,7 @@ namespace STK_ToolBox.ViewModels
             }
         }
 
-        // ── 탭 구성: DetailUnit 순서 보존 / 탭당 32개(좌16, 우16) ──────
+        // 탭 구성: DetailUnit 순서 보존 / 탭당 32개(좌16, 우16)
         private void RebuildTabsStable()
         {
             var oldKey = SelectedTab?.Key;
@@ -296,7 +296,7 @@ namespace STK_ToolBox.ViewModels
             SelectedTab = Tabs.FirstOrDefault(t => t.Key == oldKey) ?? Tabs.FirstOrDefault();
         }
 
-        // ── 도움말 ──────────────────────────────────────────────────
+        // 도움말 
         private void ShowHelp()
         {
             var msg =
@@ -311,7 +311,7 @@ namespace STK_ToolBox.ViewModels
             MessageBox.Show(msg, "도움말 — I/O Monitor", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        // ── CC-Link 보드 래퍼/폴링 ─────────────────────────────────
+        // CC-Link 보드 래퍼/폴링 
         private void TryOpenBoard()
         {
             try
