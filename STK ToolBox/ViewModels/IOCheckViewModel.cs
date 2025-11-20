@@ -1,6 +1,4 @@
-﻿using Microsoft.VisualBasic;
-using Microsoft.Xaml.Behaviors;
-using STK_ToolBox.Helpers;
+﻿using STK_ToolBox.Helpers;
 using STK_ToolBox.Models;
 using System;
 using System.Collections.Generic;
@@ -13,38 +11,34 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using System.Threading.Tasks;
 
 namespace STK_ToolBox.ViewModels
 {
     public class IOCheckViewModel : BaseViewModel
     {
-        // Public Bindings
         public ObservableCollection<IOMonitorItem> IOList { get; } = new ObservableCollection<IOMonitorItem>();
         public ObservableCollection<TabPageVM> Tabs { get; } = new ObservableCollection<TabPageVM>();
 
         private TabPageVM _selectedTab;
         public TabPageVM SelectedTab
         {
-            get => _selectedTab;
+            get { return _selectedTab; }
             set
             {
                 if (_selectedTab == value) return;
                 _selectedTab = value;
                 OnPropertyChanged();
-                // 탭 바꾸면 보이는 항목 즉시 갱신
-                PollVisibleItems();
+                var _ = PollVisibleItemsAsync();
             }
         }
 
-        // Status bar (H/W 연결 표시)
         private bool _hwConnected;
-        public string HwStatusText => _hwConnected ? "H/W: Connected" : "H/W: Disconnected";
-        public Brush HwStatusBrush => _hwConnected ? Brushes.SeaGreen : Brushes.IndianRed;
+        public string HwStatusText { get { return _hwConnected ? "H/W: Connected" : "H/W: Disconnected"; } }
+        public Brush HwStatusBrush { get { return _hwConnected ? Brushes.SeaGreen : Brushes.IndianRed; } }
 
-        // 상태 파일 경로(UI 표시)
-        public string StateFilePath => _stateFile;
+        public string StateFilePath { get { return _stateFile; } }
 
-        // Commands
         public ICommand RefreshCommand { get; }
         public ICommand SaveCommand { get; }
         public ICommand LoadStateCommand { get; }
@@ -52,102 +46,128 @@ namespace STK_ToolBox.ViewModels
         public ICommand ToggleOutputCommand { get; }
         public ICommand OpenNoteCommand { get; }
 
-        // Config / Paths
         private readonly string DbPath = @"D:\LBS_DB\LBSControl.db3";
-        private readonly int _stationNo = 0; // CC-Link Station 번호
+        private readonly short _channelNo = 81;
 
         private readonly string _stateDir =
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "STK_ToolBox");
         private readonly string _stateFile;
 
-        // 메모 저장소 (키: See GetKey)
-        private readonly Dictionary<string, string> _notes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, string> _notes =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        // 폴링 타이머
+        // 주소 파싱 캐시
+        private class ParsedAddr
+        {
+            public short DevType;     // MdFunc32Wrapper.DevX / DevY
+            public short Station;     // 1..n
+            public int Bit;           // 0..31
+            public short BlockStart;  // 0 또는 16
+            public int BitOffset;     // 0..15
+            public bool IsOutput { get { return DevType == MdFunc32Wrapper.DevY; } }
+        }
+        private readonly Dictionary<IOMonitorItem, ParsedAddr> _addrCache =
+            new Dictionary<IOMonitorItem, ParsedAddr>();
+
         private readonly DispatcherTimer _pollTimer;
+        private bool _polling;
 
         public IOCheckViewModel()
         {
             _stateFile = Path.Combine(_stateDir, "io_check_state.csv");
+            MdFunc32Wrapper.LoadIoByteTables(DbPath);
 
             RefreshCommand = new RelayCommand(() => LoadIOStatus());
             SaveCommand = new RelayCommand(() => SaveStates());
             LoadStateCommand = new RelayCommand(() => LoadSavedStates());
             HelpCommand = new RelayCommand(() => ShowHelp());
-            ToggleOutputCommand = new RelayCommand<IOMonitorItem>(ToggleOutput, it => it?.CanToggle == true);
+            ToggleOutputCommand = new RelayCommand<IOMonitorItem>(ToggleOutput, it => it != null && it.CanToggle);
             OpenNoteCommand = new RelayCommand<IOMonitorItem>(OpenNote);
 
-            // 데이터 로드 → 보드 연결 → 폴링 시작
             LoadIOStatus();
-            TryOpenBoard();
 
-            _pollTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
-            _pollTimer.Tick += (s, e) => PollVisibleItems();
+            _pollTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
+            _pollTimer.Tick += async (s, e) => await PollVisibleItemsAsync();
             _pollTimer.Start();
         }
 
-        // 메모 입력/수정
+
+        public void OnViewLoaded()
+        {
+            var rc = MdFunc32Wrapper.Open(_channelNo);
+            _hwConnected = (rc == 0);
+            OnPropertyChanged(nameof(HwStatusText));
+            OnPropertyChanged(nameof(HwStatusBrush));
+
+            if (!_hwConnected)
+                PostPopup("로드 오류: mdOpen 실패(chan=" + _channelNo + ", rc=" + rc + ")", "오류", MessageBoxImage.Error);
+
+            var _ = PollVisibleItemsAsync();
+        }
+
+        private void PostPopup(string text, string title, MessageBoxImage icon)
+        {
+            var d = Application.Current != null ? Application.Current.Dispatcher : null;
+            if (d == null) return;
+            d.BeginInvoke(new Action(() => MessageBox.Show(text, title, MessageBoxButton.OK, icon)),
+                          DispatcherPriority.Background);
+        }
+
         private void OpenNote(IOMonitorItem item)
         {
             if (item == null) return;
             var key = GetKey(item);
-            _notes.TryGetValue(key, out var current);
+            string current;
+            _notes.TryGetValue(key, out current);
 
             var result = NotePrompt.Show("특이사항 코멘트 입력창",
-                                         "해당 I/O 항목에 대한 메모를 입력하세요.\r\n빈 칸으로 저장하면 메모가 삭제됩니다.",
-                                         current ?? string.Empty);
-            if (result == null) return;           // 취소
-            var text = result.Trim();
+                "해당 I/O 항목에 대한 메모를 입력하세요.\r\n빈 칸으로 저장하면 메모가 삭제됩니다.",
+                current ?? string.Empty);
+            if (result == null) return;
 
-            if (string.IsNullOrEmpty(text))
-                _notes.Remove(key);
-            else
-                _notes[key] = text;
+            var text = result.Trim();
+            if (string.IsNullOrEmpty(text)) _notes.Remove(key);
+            else _notes[key] = text;
         }
 
-        // CC-Link 토글
         private void ToggleOutput(IOMonitorItem item)
         {
             if (item == null || !item.CanToggle) return;
+            if (!_hwConnected) { PostPopup("보드가 연결되지 않았습니다.", "I/O 출력", MessageBoxImage.Warning); return; }
+            ParsedAddr p;
+            if (!_addrCache.TryGetValue(item, out p)) return;
+            if (!p.IsOutput) return;
 
-            var ok = WriteBitSafe(item.Address, !item.CurrentState);
-            if (!ok)
-            {
-                MessageBox.Show($"출력 토글 실패: {item.Address}\n{HwStatusText}",
-                    "I/O 출력", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
+            ushort bits;
+            if (!MdFunc32Wrapper.TryReadBlock16(p.Station, p.DevType, p.BlockStart, out bits))
+                bits = 0;
 
-            // 성공 시 즉시 재독 → UI 반영
-            if (ReadBitSafe(item.Address, out var on))
-                item.CurrentState = on;
+            ushort mask = (ushort)(1 << p.BitOffset);
+            bits = item.CurrentState ? (ushort)(bits & ~mask) : (ushort)(bits | mask);
+
+            if (MdFunc32Wrapper.TryWriteBlock16(p.Station, p.DevType, p.BlockStart, bits))
+                item.CurrentState = !item.CurrentState;
             else
-                MessageBox.Show($"토글 후 읽기 실패: {item.Address}\n{HwStatusText}",
-                    "I/O 출력", MessageBoxButton.OK, MessageBoxImage.Warning);
+                PostPopup("출력 토글 실패: " + item.Address + "\r\n" + HwStatusText, "I/O 출력", MessageBoxImage.Warning);
         }
 
-        // DB 로드 + 상태 반영
         private void LoadIOStatus()
         {
             IOList.Clear();
-
             try
             {
                 if (!File.Exists(DbPath))
                 {
-                    MessageBox.Show($"SQLite DB 파일을 찾을 수 없습니다:\n{DbPath}",
-                        "DB 연결 오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                    PostPopup("SQLite DB 파일을 찾을 수 없습니다:\r\n" + DbPath, "DB 연결 오류", MessageBoxImage.Error);
                     return;
                 }
 
-                using (var conn = new SQLiteConnection($"Data Source={DbPath};Version=3;"))
+                using (var conn = new SQLiteConnection("Data Source=" + DbPath + ";Version=3;"))
                 {
                     conn.Open();
-
                     using (var cmd = new SQLiteCommand("SELECT * FROM IOMonitoring;", conn))
                     using (var reader = cmd.ExecuteReader())
                     {
-                        // DB 원래 순서대로 쌓음
                         while (reader.Read())
                         {
                             int Find(string a, params string[] b)
@@ -158,7 +178,7 @@ namespace STK_ToolBox.ViewModels
                                 }
                                 return -1;
                             }
-                            string Read(int ord) => (ord < 0 || reader.IsDBNull(ord)) ? "" : (reader.GetValue(ord)?.ToString() ?? "");
+                            Func<int, string> Read = ord => (ord < 0 || reader.IsDBNull(ord)) ? "" : (reader.GetValue(ord) + "");
 
                             int idIdx = Find("ID", "Id", "io_id", "rowid");
                             int nameIdx = Find("IOName", "Name", "IoName");
@@ -167,7 +187,7 @@ namespace STK_ToolBox.ViewModels
                             int detIdx = Find("DetailUnit", "detailunit", "detailUnit");
                             int dscIdx = Find("Description", "Desc", "Remark", "Remarks");
 
-                            IOList.Add(new IOMonitorItem
+                            var item = new IOMonitorItem
                             {
                                 Id = (idIdx >= 0 && !reader.IsDBNull(idIdx)) ? Convert.ToInt32(reader.GetValue(idIdx)) : 0,
                                 IOName = Read(nameIdx),
@@ -175,56 +195,50 @@ namespace STK_ToolBox.ViewModels
                                 Unit = Read(unitIdx),
                                 DetailUnit = Read(detIdx),
                                 Description = Read(dscIdx),
-                                CurrentState = false // 폴링이 바로 갱신
-                            });
+                                CurrentState = false
+                            };
+                            IOList.Add(item);
                         }
                     }
                 }
 
-                // 체크/메모 상태 복원
-                LoadSavedStates(silent: true);
-
-                // 탭 재구성(DetailUnit 순서 유지, 32개/탭)
+                BuildAddressCache();
+                LoadSavedStates(true);
                 RebuildTabsStable();
-
-                // 첫 화면 즉시 폴링
-                PollVisibleItems();
+                var _ = PollVisibleItemsAsync();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"로드 오류: {ex.Message}", "오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                PostPopup("로드 오류: " + ex.Message, "오류", MessageBoxImage.Error);
             }
         }
 
-        // 저장/불러오기(CSV: Id,Address,IOName,IsChecked,Note)
         private void SaveStates()
         {
             try
             {
-                if (!Directory.Exists(_stateDir))
-                    Directory.CreateDirectory(_stateDir);
+                if (!Directory.Exists(_stateDir)) Directory.CreateDirectory(_stateDir);
 
                 var sb = new StringBuilder();
                 sb.AppendLine("Id,Address,IOName,IsChecked,Note");
                 foreach (var it in IOList)
                 {
-                    var idPart = it.Id;
-                    var addrPart = (it.Address ?? "").Replace(",", "");
-                    var namePart = (it.IOName ?? "").Replace(",", "");
-                    var isChecked = it.IsChecked;
-                    var note = "";
+                    int idPart = it.Id;
+                    string addrPart = (it.Address ?? "").Replace(",", "");
+                    string namePart = (it.IOName ?? "").Replace(",", "");
+                    bool isChecked = it.IsChecked;
+                    string note;
                     _notes.TryGetValue(GetKey(it), out note);
-                    note = (note ?? "").Replace("\r", " ").Replace("\n", " ").Replace(",", "，"); // CSV 안전
-
-                    sb.AppendLine($"{idPart},{addrPart},{namePart},{isChecked},{note}");
+                    note = (note ?? "").Replace("\r", " ").Replace("\n", " ").Replace(",", "，");
+                    sb.AppendLine(idPart + "," + addrPart + "," + namePart + "," + isChecked + "," + note);
                 }
 
                 File.WriteAllText(_stateFile, sb.ToString(), Encoding.UTF8);
-                MessageBox.Show($"저장 완료\n{_stateFile}", "저장", MessageBoxButton.OK, MessageBoxImage.Information);
+                PostPopup("저장 완료\r\n" + _stateFile, "저장", MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"저장 중 오류: {ex.Message}", "저장 오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                PostPopup("저장 중 오류: " + ex.Message, "저장 오류", MessageBoxImage.Error);
             }
         }
 
@@ -234,8 +248,7 @@ namespace STK_ToolBox.ViewModels
             {
                 if (!File.Exists(_stateFile))
                 {
-                    if (!silent)
-                        MessageBox.Show("저장된 체크 상태 파일이 없습니다.", "불러오기", MessageBoxButton.OK, MessageBoxImage.Information);
+                    if (!silent) PostPopup("저장된 체크 상태 파일이 없습니다.", "불러오기", MessageBoxImage.Information);
                     return;
                 }
 
@@ -245,27 +258,18 @@ namespace STK_ToolBox.ViewModels
                 foreach (var line in lines.Skip(1))
                 {
                     if (string.IsNullOrWhiteSpace(line)) continue;
-
-                    // 쉼표가 들어갈 수 있는 Note를 위해 1~4열까지만 Split, 나머지는 Note로 취급
                     var raw = line.Split(',');
                     if (raw.Length < 4) continue;
 
-                    // 앞 4개는 고정
-                    int.TryParse(raw[0], out var id);
-                    var addr = (raw[1] ?? "").Trim();
-                    var name = (raw[2] ?? "").Trim();
-                    bool.TryParse(raw[3], out var isChecked);
+                    int id; int.TryParse(raw[0], out id);
+                    string addr = (raw[1] ?? "").Trim();
+                    string name = (raw[2] ?? "").Trim();
+                    bool isChecked; bool.TryParse(raw[3], out isChecked);
 
-                    // 5번째 이후는 Note 원문(과거 호환 위해 없을 수 있음)
-                    string note = null;
-                    if (raw.Length >= 5)
-                        note = string.Join(",", raw.Skip(4)).Trim(); // CSV에서 ,를 ‘，’로 저장했으므로 그대로 결합
+                    string note = raw.Length >= 5 ? string.Join(",", raw.Skip(4)).Trim() : null;
 
-                    // 매칭
                     IOMonitorItem target = null;
-                    if (id != 0)
-                        target = IOList.FirstOrDefault(x => x.Id == id);
-
+                    if (id != 0) target = IOList.FirstOrDefault(x => x.Id == id);
                     if (target == null && (!string.IsNullOrEmpty(addr) || !string.IsNullOrEmpty(name)))
                         target = IOList.FirstOrDefault(x =>
                             string.Equals(x.Address ?? "", addr, StringComparison.OrdinalIgnoreCase) &&
@@ -275,37 +279,29 @@ namespace STK_ToolBox.ViewModels
                     {
                         target.IsChecked = isChecked;
                         appliedCheck++;
-
                         var key = GetKey(target);
-                        if (!string.IsNullOrEmpty(note))
-                        {
-                            // 저장 시 개행/콤마 정리했으므로 그대로 탑재
-                            _notes[key] = note;
-                            appliedNote++;
-                        }
+                        if (!string.IsNullOrEmpty(note)) { _notes[key] = note; appliedNote++; }
                     }
                 }
 
                 if (!silent)
-                    MessageBox.Show($"불러오기 완료: 체크 {appliedCheck}개, 메모 {appliedNote}개 적용\n{_stateFile}",
-                        "불러오기", MessageBoxButton.OK, MessageBoxImage.Information);
+                    PostPopup("불러오기 완료: 체크 " + appliedCheck + "개, 메모 " + appliedNote + "개 적용\r\n" + _stateFile,
+                              "불러오기", MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                if (!silent)
-                    MessageBox.Show($"불러오는 중 오류: {ex.Message}", "불러오기 오류", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (!silent) PostPopup("불러오는 중 오류: " + ex.Message, "불러오기 오류", MessageBoxImage.Error);
             }
         }
 
-        // 탭 구성: DetailUnit 순서 보존 / 탭당 32개(좌16, 우16)
         private void RebuildTabsStable()
         {
-            var oldKey = SelectedTab?.Key;
+            var oldKey = SelectedTab != null ? SelectedTab.Key : null;
 
             var groupOrder = new List<string>();
             var bucket = new Dictionary<string, List<IOMonitorItem>>();
 
-            foreach (var it in IOList) // DB 원본 순서 유지
+            foreach (var it in IOList)
             {
                 var detail = string.IsNullOrWhiteSpace(it.DetailUnit) ? "N/A" : it.DetailUnit;
                 if (!bucket.ContainsKey(detail))
@@ -325,8 +321,8 @@ namespace STK_ToolBox.ViewModels
                 for (int page = 0; page < items.Count; page += pageSize)
                 {
                     var chunk = items.Skip(page).Take(pageSize).ToList();
-                    var key = $"{detail}|{page / pageSize}";
-                    var title = detail; // 헤더 = DetailUnit만
+                    var key = detail + "|" + (page / pageSize);
+                    var title = detail;
                     newTabs.Add(new TabPageVM(key, title, chunk));
                 }
             }
@@ -340,120 +336,109 @@ namespace STK_ToolBox.ViewModels
             SelectedTab = Tabs.FirstOrDefault(t => t.Key == oldKey) ?? Tabs.FirstOrDefault();
         }
 
-        // 도움말 
         private void ShowHelp()
         {
             var msg =
-@"I/O 모니터 사용법
-
-• 저장/불러오기: Checked 상태와 메모(Note)을 CSV로 저장/적용.
-• 탭: DetailUnit 순서 그대로, 한 탭에 32개(좌16/우16) 표시.
-• Output: Y 주소(출력)만 토글 가능.
-• Checked: 체크 시 행 배경이 강조됩니다.
-• 메모: 각 행의 '메모' 버튼으로 메모 작성/수정/삭제.
-
-저장 파일: " + StateFilePath;
-            MessageBox.Show(msg, "도움말 — I/O Monitor", MessageBoxButton.OK, MessageBoxImage.Information);
+"I/O 모니터 사용법\r\n\r\n" +
+"• 저장/불러오기: Checked 상태와 메모(Note)을 CSV로 저장/적용.\r\n" +
+"• 탭: DetailUnit 순서 그대로, 한 탭에 32개(좌16/우16) 표시.\r\n" +
+"• Output: Y 주소(출력)만 토글 가능.\r\n" +
+"• Checked: 체크 시 행 배경이 강조됩니다.\r\n" +
+"• 메모: 각 행의 '메모' 버튼으로 메모 작성/수정/삭제.\r\n\r\n" +
+"저장 파일: " + StateFilePath;
+            PostPopup(msg, "도움말 — I/O Monitor", MessageBoxImage.Information);
         }
 
-        // CC-Link 보드 래퍼/폴링 
-        private void TryOpenBoard()
+        private void BuildAddressCache()
         {
-            try
+            _addrCache.Clear();
+            foreach (var it in IOList)
             {
-                _hwConnected = (MdFunc32Wrapper.Open(_stationNo) == 0);
-            }
-            catch
-            {
-                _hwConnected = false;
-            }
-            OnPropertyChanged(nameof(HwStatusText));
-            OnPropertyChanged(nameof(HwStatusBrush));
-        }
-
-        private bool ReadBitSafe(string address, out bool on)
-        {
-            on = false;
-            if (string.IsNullOrWhiteSpace(address)) return false;
-
-            if (!_hwConnected) TryOpenBoard();
-            if (!_hwConnected) return false;
-
-            try
-            {
-                return MdFunc32Wrapper.TryReadBit(_stationNo, address, out on);
-            }
-            catch
-            {
-                _hwConnected = false;
-                OnPropertyChanged(nameof(HwStatusText));
-                OnPropertyChanged(nameof(HwStatusBrush));
-                return false;
-            }
-        }
-
-        private bool WriteBitSafe(string address, bool value)
-        {
-            if (string.IsNullOrWhiteSpace(address)) return false;
-
-            if (!_hwConnected) TryOpenBoard();
-            if (!_hwConnected) return false;
-
-            try
-            {
-                return MdFunc32Wrapper.TryWriteBit(_stationNo, address, value);
-            }
-            catch
-            {
-                _hwConnected = false;
-                OnPropertyChanged(nameof(HwStatusText));
-                OnPropertyChanged(nameof(HwStatusBrush));
-                return false;
-            }
-        }
-
-        private void PollVisibleItems()
-        {
-            if (SelectedTab == null || !_hwConnected) return;
-
-            void Update(IEnumerable<IOMonitorItem> list)
-            {
-                foreach (var it in list)
+                if (string.IsNullOrWhiteSpace(it.Address)) continue;
+                short devType; short st; int bit;
+                if (MdFunc32Wrapper.TryParseForBlock(it.Address.Trim(), out devType, out st, out bit))
                 {
-                    if (string.IsNullOrWhiteSpace(it.Address)) continue;
-                    if (ReadBitSafe(it.Address, out var on))
-                        it.CurrentState = on;
+                    short block = (short)((bit / 16) * 16);
+                    _addrCache[it] = new ParsedAddr
+                    {
+                        DevType = devType,
+                        Station = st,
+                        Bit = bit,
+                        BlockStart = block,
+                        BitOffset = bit % 16
+                    };
                 }
             }
+        }
+
+        private async Task PollVisibleItemsAsync()
+        {
+            if (SelectedTab == null || !_hwConnected) return;
+            if (_polling) return;
+            _polling = true;
 
             try
             {
-                Update(SelectedTab.Left16);
-                Update(SelectedTab.Right16);
+                var visible = SelectedTab.Left16.Concat(SelectedTab.Right16)
+                                .Where(it => it != null && _addrCache.ContainsKey(it))
+                                .ToList();
+                if (visible.Count == 0) return;
+
+                // 문자열 키 (DevType:Station:BlockStart)
+                var groups = visible.GroupBy(it =>
+                {
+                    var p = _addrCache[it];
+                    return p.DevType + ":" + p.Station + ":" + p.BlockStart;
+                }).ToList();
+
+                var results = new Dictionary<IOMonitorItem, bool>();
+                await Task.Run(() =>
+                {
+                    foreach (var g in groups)
+                    {
+                        string k = g.Key;
+                        var first = _addrCache[g.First()];
+                        ushort bits;
+                        if (!MdFunc32Wrapper.TryReadBlock16(first.Station, first.DevType, first.BlockStart, out bits))
+                            continue;
+
+                        foreach (var it in g)
+                        {
+                            var p = _addrCache[it];
+                            bool on = ((bits >> p.BitOffset) & 1) != 0;
+                            results[it] = on;
+                        }
+                    }
+                });
+
+                foreach (var kv in results)
+                    kv.Key.CurrentState = kv.Value;
             }
             catch
             {
-                // 폴링 중 예외는 무시(안전)
+                // swallow
+            }
+            finally
+            {
+                _polling = false;
             }
         }
 
-        // ★ 메모 키 (Id 우선, 없으면 Address|IOName)
         private static string GetKey(IOMonitorItem it)
         {
             if (it == null) return "";
-            if (it.Id != 0) return $"ID:{it.Id}";
+            if (it.Id != 0) return "ID:" + it.Id;
             var addr = it.Address ?? "";
             var name = it.IOName ?? "";
-            return $"AK:{addr}|{name}";
+            return "AK:" + addr + "|" + name;
         }
     }
 
-    // 한 탭(페이지) 모델: 32개 아이템(좌16/우16)
     public class TabPageVM
     {
-        public string Key { get; }
-        public string Header { get; }
-        public List<IOMonitorItem> Items { get; }
+        public string Key { get; private set; }
+        public string Header { get; private set; }
+        public List<IOMonitorItem> Items { get; private set; }
 
         public TabPageVM(string key, string header, List<IOMonitorItem> items)
         {
@@ -462,7 +447,7 @@ namespace STK_ToolBox.ViewModels
             Items = items ?? new List<IOMonitorItem>();
         }
 
-        public IEnumerable<IOMonitorItem> Left16 => Items.Take(16);
-        public IEnumerable<IOMonitorItem> Right16 => Items.Skip(16).Take(16);
+        public IEnumerable<IOMonitorItem> Left16 { get { return Items.Take(16); } }
+        public IEnumerable<IOMonitorItem> Right16 { get { return Items.Skip(16).Take(16); } }
     }
 }

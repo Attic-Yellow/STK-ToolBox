@@ -25,6 +25,12 @@ namespace STK_ToolBox.View
         {
             InitializeComponent();
             this.DataContext = new IOCheckViewModel();
+
+            this.Loaded += (s, e) =>
+            {
+                if (DataContext is IOCheckViewModel vm)
+                    vm.OnViewLoaded();
+            };
         }
     }
 }
