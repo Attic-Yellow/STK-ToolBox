@@ -132,24 +132,64 @@ namespace STK_ToolBox.ViewModels
 
         private void ToggleOutput(IOMonitorItem item)
         {
-            if (item == null || !item.CanToggle) return;
-            if (!_hwConnected) { PostPopup("보드가 연결되지 않았습니다.", "I/O 출력", MessageBoxImage.Warning); return; }
+            if (item == null)
+            {
+                PostPopup("선택된 I/O 항목이 없습니다.", "I/O 출력", MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!item.CanToggle)
+            {
+                PostPopup("이 항목은 출력(Y)가 아니거나 토글 불가로 설정되어 있습니다.\r\nAddress=" + item.Address,
+                          "I/O 출력", MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!_hwConnected)
+            {
+                PostPopup("보드가 연결되지 않았습니다.\r\n(H/W: Disconnected 상태)", "I/O 출력", MessageBoxImage.Warning);
+                return;
+            }
+
             ParsedAddr p;
-            if (!_addrCache.TryGetValue(item, out p)) return;
-            if (!p.IsOutput) return;
+            if (!_addrCache.TryGetValue(item, out p))
+            {
+                PostPopup("주소 파싱 실패: " + item.Address,
+                          "I/O 출력", MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!p.IsOutput)
+            {
+                PostPopup("출력(Y) 주소가 아닙니다: " + item.Address,
+                          "I/O 출력", MessageBoxImage.Warning);
+                return;
+            }
+
 
             ushort bits;
             if (!MdFunc32Wrapper.TryReadBlock16(p.Station, p.DevType, p.BlockStart, out bits))
-                bits = 0;
+            {
+                PostPopup("블록 읽기 실패: " + item.Address,
+                          "I/O 출력", MessageBoxImage.Warning);
+                return;
+            }
 
             ushort mask = (ushort)(1 << p.BitOffset);
-            bits = item.CurrentState ? (ushort)(bits & ~mask) : (ushort)(bits | mask);
+            bool newValue = !item.CurrentState;
+            bits = newValue ? (ushort)(bits | mask) : (ushort)(bits & ~mask);
 
             if (MdFunc32Wrapper.TryWriteBlock16(p.Station, p.DevType, p.BlockStart, bits))
-                item.CurrentState = !item.CurrentState;
+            {
+                item.CurrentState = newValue;
+            }
             else
-                PostPopup("출력 토글 실패: " + item.Address + "\r\n" + HwStatusText, "I/O 출력", MessageBoxImage.Warning);
+            {
+                PostPopup("출력 토글 실패(Write 실패): " + item.Address,
+                          "I/O 출력", MessageBoxImage.Warning);
+            }
         }
+
 
         private void LoadIOStatus()
         {

@@ -319,46 +319,51 @@ namespace STK_ToolBox.Helpers
             if (string.IsNullOrWhiteSpace(device))
                 return false;
 
-            // 형식: RX 3.5 / RY 2.10
-            Match m1 = RxRy.Match(device);
+            // 1) RX 3.5 / RY 2.10 형식 그대로 지원
+            var m1 = RxRy.Match(device);
             if (m1.Success)
             {
                 char ch = char.ToUpperInvariant(m1.Groups[1].Value[0]);
                 devType = (short)(ch == 'X' ? DevX : DevY);
+
                 station = short.Parse(m1.Groups[2].Value, CultureInfo.InvariantCulture);
                 bit = int.Parse(m1.Groups[3].Value, CultureInfo.InvariantCulture);
+
                 return (station > 0 && bit >= 0 && bit < 32);
             }
 
-            // 형식: X0000, Y0010 (8진 또는 16진)
-            Match m2 = Xy.Match(device);
-            if (!m2.Success) return false;
+            // 2) X0000 / Y0018 / Y00B0 같은 형식: 숫자 부분은 "항상 16진수"로 본다
+            var m2 = Xy.Match(device);
+            if (!m2.Success)
+                return false;
 
             char c = char.ToUpperInvariant(m2.Groups[1].Value[0]);
             devType = (short)(c == 'X' ? DevX : DevY);
-            string num = m2.Groups[2].Value;
+
+            string num = m2.Groups[2].Value.Trim();
 
             int linear;
-            bool hex = Regex.IsMatch(num, "[A-Fa-f]");
-
             try
             {
-                // 문자에 A~F가 있으면 16진수, 아니면 8진수로 해석
-                linear = hex
-                    ? int.Parse(num, NumberStyles.HexNumber, CultureInfo.InvariantCulture)
-                    : Convert.ToInt32(num, 8);
+                // ★ 여기! 16진수로 통일
+                linear = int.Parse(num, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
             }
             catch
             {
                 return false;
             }
 
-            if (linear < 0) return false;
+            if (linear < 0)
+                return false;
 
+            // 기존 GetStationNo / GetIONumber 역함수:
+            // station = Addr/32 + 1, bit = Addr%32
             station = (short)(linear / 32 + 1);
             bit = linear % 32;
 
-            if (station <= 0) station = 1;
+            if (station <= 0)
+                station = 1;
+
             return true;
         }
 
