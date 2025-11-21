@@ -165,7 +165,7 @@ namespace STK_ToolBox.Helpers
             if (_channel != 0 && map.TryGetValue(_channel, out info))
             {
                 if (info.ByteSize < 2) return 2;
-                return 2; // ★ 지금은 1 word(2 byte)만 사용. 필요하면 info.ByteSize로 확장 가능.
+                return 2; // 지금은 1 word(2 byte)만 사용. 필요하면 info.ByteSize로 확장 가능.
             }
 
             return 2;
@@ -345,7 +345,7 @@ namespace STK_ToolBox.Helpers
             int linear;
             try
             {
-                // ★ 여기! 16진수로 통일
+                // 16진수로 통일
                 linear = int.Parse(num, NumberStyles.HexNumber, CultureInfo.InvariantCulture);
             }
             catch
