@@ -31,6 +31,12 @@ namespace STK_ToolBox.ViewModels
         public ICommand RefreshCommand { get; private set; }
         public ICommand HelpCommand { get; private set; }
 
+        // ★ 추가된 커맨드 4개
+        public ICommand CheckAllCommand { get; private set; }
+        public ICommand UncheckAllCommand { get; private set; }
+        public ICommand CheckCurrentTabCommand { get; private set; }
+        public ICommand UncheckCurrentTabCommand { get; private set; }
+
         private readonly string _dbPath = @"D:\LBS_DB\LBSControl.db3";
 
         private const short ChannelNo = 81;
@@ -42,6 +48,12 @@ namespace STK_ToolBox.ViewModels
 
             RefreshCommand = new RelayCommand(new Action(LoadIOStatus));
             HelpCommand = new RelayCommand(new Action(ShowHelp));
+
+            // ★ 커맨드 초기화
+            CheckAllCommand = new RelayCommand(new Action(CheckAllNotSpare));
+            UncheckAllCommand = new RelayCommand(new Action(UncheckAllNotSpare));
+            CheckCurrentTabCommand = new RelayCommand(new Action(CheckCurrentTabNotSpare));
+            UncheckCurrentTabCommand = new RelayCommand(new Action(UncheckCurrentTabNotSpare));
 
             // IOByteTable_X / Y 로드
             MdFunc32Wrapper.LoadIoByteTables(_dbPath);
@@ -198,6 +210,55 @@ namespace STK_ToolBox.ViewModels
                 return new IOMonitorItem[0];
 
             return SelectedTab.Left16.Concat(SelectedTab.Right16);
+        }
+
+        // ─────────────────────────────────────
+        //   Spare 제외 체크/해제 로직
+        //   기준: IOName 안에 "Spare" (대소문자 무시)
+        // ─────────────────────────────────────
+
+        private static bool IsSpare(IOMonitorItem item)
+        {
+            if (item == null) return false;
+
+            string name = item.IOName;
+            if (string.IsNullOrEmpty(name)) return false;
+
+            return name.IndexOf("spare", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private void CheckAllNotSpare()
+        {
+            SetCheckForItems(IOList, true);
+        }
+
+        private void UncheckAllNotSpare()
+        {
+            SetCheckForItems(IOList, false);
+        }
+
+        private void CheckCurrentTabNotSpare()
+        {
+            if (SelectedTab == null) return;
+            SetCheckForItems(SelectedTab.Items, true);
+        }
+
+        private void UncheckCurrentTabNotSpare()
+        {
+            if (SelectedTab == null) return;
+            SetCheckForItems(SelectedTab.Items, false);
+        }
+
+        private void SetCheckForItems(IEnumerable<IOMonitorItem> items, bool check)
+        {
+            if (items == null) return;
+
+            foreach (var it in items)
+            {
+                if (it == null) continue;
+                if (IsSpare(it)) continue;          // Spare 제외
+                it.IsChecked = check;
+            }
         }
     }
 

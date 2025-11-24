@@ -27,7 +27,7 @@ namespace STK_ToolBox.ViewModels
     /// </summary>
     public abstract class IoMonitorViewModelBase : BaseViewModel
     {
-        //  Public Bindings 
+        // Public Bindings 
 
         public ObservableCollection<IOMonitorItem> IOList { get; private set; }
 
@@ -52,7 +52,7 @@ namespace STK_ToolBox.ViewModels
         public ICommand ToggleOutputCommand { get; private set; }
         public ICommand OpenNoteCommand { get; private set; }
 
-        //  내부 필드 
+        // 내부 필드
 
         protected readonly short _channelNo;
 
@@ -62,10 +62,10 @@ namespace STK_ToolBox.ViewModels
         protected readonly Dictionary<string, string> _notes =
             new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        // 변경 추적용
-        private long _nextVersion = 1;        // 변경 버전 증가용
-        private long _lastSavedVersion = 0;   // 마지막으로 저장한 버전
-        private DateTime _lastSaveTime = DateTime.MinValue;  // 마지막 저장 시각
+        // 자동 저장 버전 관리
+        private long _nextVersion = 1;
+        private long _lastSavedVersion = 0;
+        private DateTime _lastSaveTime = DateTime.MinValue;
 
         /// <summary>주소 파싱 결과 캐시</summary>
         protected class ParsedAddr
@@ -92,7 +92,8 @@ namespace STK_ToolBox.ViewModels
         private bool _autoSavePending;
         private bool _suppressAutoSave;
 
-        //  생성자 
+        // 생성자
+
         protected IoMonitorViewModelBase(short channelNo, string stateFileName)
         {
             _channelNo = channelNo;
@@ -116,13 +117,14 @@ namespace STK_ToolBox.ViewModels
             _pollTimer.Tick += async (s, e) => await PollVisibleItemsAsync();
             _pollTimer.Start();
 
-            // Auto save timer (디바운스용)
+            // Auto save timer (디바운스)
             _autoSaveTimer = new DispatcherTimer();
-            _autoSaveTimer.Interval = TimeSpan.FromSeconds(1.5); // 마지막 변경 후 1.5초 지나면 저장 시도
+            _autoSaveTimer.Interval = TimeSpan.FromSeconds(1.5);
             _autoSaveTimer.Tick += AutoSaveTimer_Tick;
         }
 
-        //  View 로드 시 보드 Open 
+        // View 로드 시 보드 Open 
+
         public virtual void OnViewLoaded()
         {
             short rc = MdFunc32Wrapper.Open(_channelNo);
@@ -142,6 +144,7 @@ namespace STK_ToolBox.ViewModels
         }
 
         //  공통 팝업 
+
         protected void PostPopup(string text, string title, MessageBoxImage icon)
         {
             var d = Application.Current != null ? Application.Current.Dispatcher : null;
@@ -152,7 +155,8 @@ namespace STK_ToolBox.ViewModels
                 DispatcherPriority.Background);
         }
 
-        //  메모/노트 
+        // 메모/노트 
+
         protected virtual void OpenNote(IOMonitorItem item)
         {
             if (item == null) return;
@@ -174,11 +178,15 @@ namespace STK_ToolBox.ViewModels
             else
                 _notes[key] = text;
 
+            // 메모 존재 여부를 Item에 반영
+            item.HasNote = !string.IsNullOrEmpty(text);
+
             // 메모 수정도 자동 저장 대상
             MarkDirtyAndScheduleSave();
         }
 
-        //  출력 토글 
+        // 출력 토글 
+
         protected virtual bool CanToggleOutput(IOMonitorItem item)
         {
             return item != null && item.CanToggle;
@@ -240,8 +248,8 @@ namespace STK_ToolBox.ViewModels
             if (MdFunc32Wrapper.TryWriteBlock16(p.Station, p.DevType, p.BlockStart, bits))
             {
                 item.CurrentState = newValue;
-                // 필요하면 토글도 자동 저장 대상으로 포함할 수 있음
-                // MarkDirtyAndScheduleSave();
+                // 필요하면 출력 토글도 자동 저장에 포함 가능
+                // ScheduleAutoSave();
             }
             else
             {
@@ -250,14 +258,12 @@ namespace STK_ToolBox.ViewModels
             }
         }
 
-        //  체크/메모 저장/불러오기 
+        // 체크/메모 저장/불러오기 
 
-        // 수동 저장(버튼) → 팝업 표시 + 버전 동기화
+        // 수동 저장(버튼) → 팝업 표시
         protected virtual void SaveStates()
         {
             SaveStatesCore(true);
-            _lastSavedVersion = _nextVersion;
-            _lastSaveTime = DateTime.Now;
         }
 
         // 실제 저장 로직 (showPopup=false 이면 자동 저장용)
@@ -363,14 +369,15 @@ namespace STK_ToolBox.ViewModels
                         if (!string.IsNullOrEmpty(note))
                         {
                             _notes[key] = note;
+                            target.HasNote = true;
                             appliedNote++;
+                        }
+                        else
+                        {
+                            target.HasNote = false;
                         }
                     }
                 }
-
-                // 로드가 끝난 시점의 상태를 "저장된 상태"로 간주
-                _lastSavedVersion = _nextVersion;
-                _lastSaveTime = DateTime.Now;
 
                 if (!silent)
                 {
@@ -397,6 +404,7 @@ namespace STK_ToolBox.ViewModels
         }
 
         //  주소 캐시 구성 
+
         protected virtual void BuildAddressCache()
         {
             _addrCache.Clear();
@@ -426,6 +434,7 @@ namespace STK_ToolBox.ViewModels
         }
 
         //  Polling 
+
         protected abstract IEnumerable<IOMonitorItem> GetVisibleItems();
 
         protected virtual async Task PollVisibleItemsAsync()
@@ -482,6 +491,7 @@ namespace STK_ToolBox.ViewModels
         }
 
         //  자동 저장 관련 유틸 
+
         private void IOList_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.NewItems != null)
@@ -507,27 +517,24 @@ namespace STK_ToolBox.ViewModels
                     }
                 }
             }
-            // Reset 등은 개별 PropertyChanged에서 처리
         }
 
         private void Item_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (_suppressAutoSave) return;
 
-            // 체크박스 변경 시 자동 저장 예약
             if (e.PropertyName == "IsChecked")
             {
                 MarkDirtyAndScheduleSave();
             }
-            // 메모는 OpenNote에서 MarkDirtyAndScheduleSave 호출
+            // HasNote 변경은 OpenNote()에서 ScheduleAutoSave 호출하므로 여기서 별도 처리 안 해도 됨
         }
 
         private void MarkDirtyAndScheduleSave()
         {
-            _nextVersion++;              // 변경 버전 증가
+            _nextVersion++;
             _autoSavePending = true;
 
-            // 디바운스: 타이머 시작 (이미 켜져 있으면 Tick 시점에 한 번만 처리)
             if (!_autoSaveTimer.IsEnabled)
                 _autoSaveTimer.Start();
         }
@@ -541,15 +548,12 @@ namespace STK_ToolBox.ViewModels
 
             _autoSavePending = false;
 
-            // 변경된 게 없으면 저장 안 함
             if (_nextVersion == _lastSavedVersion)
                 return;
 
-            // 최소 저장 간격 (예: 30초) 보다 너무 자주면 스킵
             TimeSpan minInterval = TimeSpan.FromSeconds(30);
             if (DateTime.Now - _lastSaveTime < minInterval)
             {
-                // 다음 변경 때 다시 시도하도록만 표시
                 _autoSavePending = true;
                 _autoSaveTimer.Start();
                 return;
@@ -562,6 +566,7 @@ namespace STK_ToolBox.ViewModels
         }
 
         //  유틸 
+
         protected static string GetKey(IOMonitorItem it)
         {
             if (it == null) return "";

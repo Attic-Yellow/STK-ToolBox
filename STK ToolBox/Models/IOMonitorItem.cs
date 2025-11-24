@@ -13,75 +13,142 @@ namespace STK_ToolBox.Models
         private string _description;
         private bool _currentState;
         private bool _isChecked;
+        private bool _hasNote;   // 메모 존재 여부
 
         public int Id
         {
-            get => _id;
-            set { if (_id != value) { _id = value; OnPropertyChanged(); } }
+            get { return _id; }
+            set
+            {
+                if (_id == value) return;
+                _id = value;
+                OnPropertyChanged();
+            }
         }
 
         public string IOName
         {
-            get => _ioName;
-            set { if (_ioName != value) { _ioName = value; OnPropertyChanged(); } }
+            get { return _ioName; }
+            set
+            {
+                if (_ioName == value) return;
+                _ioName = value;
+                OnPropertyChanged();
+            }
         }
 
         public string Address
         {
-            get => _address;
-            set { if (_address != value) { _address = value; OnPropertyChanged(); } }
+            get { return _address; }
+            set
+            {
+                if (_address == value) return;
+                _address = value;
+                OnPropertyChanged();
+            }
         }
 
         public string Unit
         {
-            get => _unit;
-            set { if (_unit != value) { _unit = value; OnPropertyChanged(); } }
+            get { return _unit; }
+            set
+            {
+                if (_unit == value) return;
+                _unit = value;
+                OnPropertyChanged();
+            }
         }
 
         public string DetailUnit
         {
-            get => _detailUnit;
-            set { if (_detailUnit != value) { _detailUnit = value; OnPropertyChanged(); } }
+            get { return _detailUnit; }
+            set
+            {
+                if (_detailUnit == value) return;
+                _detailUnit = value;
+                OnPropertyChanged();
+            }
         }
 
         public string Description
         {
-            get => _description;
-            set { if (_description != value) { _description = value; OnPropertyChanged(); } }
+            get { return _description; }
+            set
+            {
+                if (_description == value) return;
+                _description = value;
+                OnPropertyChanged();
+            }
         }
 
-        // 표시용(읽기 전용 바인딩이지만 내부에서 값 갱신 시 UI 반영을 위해 Notify)
+        // 읽기 상태 표시용
         public bool CurrentState
         {
-            get => _currentState;
-            set { if (_currentState != value) { _currentState = value; OnPropertyChanged(); } }
+            get { return _currentState; }
+            set
+            {
+                if (_currentState == value) return;
+                _currentState = value;
+                OnPropertyChanged();
+            }
         }
 
-        //  체크 반영은 이 프로퍼티만 바꿔주면 됨
+        // 체크 상태
         public bool IsChecked
         {
-            get => _isChecked;
-            set { if (_isChecked != value) { _isChecked = value; OnPropertyChanged(); } }
+            get { return _isChecked; }
+            set
+            {
+                if (_isChecked == value) return;
+                _isChecked = value;
+                OnPropertyChanged();
+            }
+        }
+
+        // 메모 존재 여부 (IOCheck 화면에서 메모 버튼 색 변경 용)
+        public bool HasNote
+        {
+            get { return _hasNote; }
+            set
+            {
+                if (_hasNote == value) return;
+                _hasNote = value;
+                OnPropertyChanged();
+            }
         }
 
         // 출력(Y)만 토글 허용
-        public bool CanToggle =>
-            !string.IsNullOrWhiteSpace(Address) &&
-            char.ToUpperInvariant(Address[0]) == 'Y';
+        public bool CanToggle
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(Address))
+                    return false;
 
-        // B접점(표시만 민트)
+                char c = char.ToUpperInvariant(Address[0]);
+                return c == 'Y';
+            }
+        }
+
+        // B접점 여부 (표시만 민트색)
         public bool IsBContact
         {
             get
             {
-                var s1 = DetailUnit?.ToUpperInvariant() ?? "";
-                var s2 = Description?.ToUpperInvariant() ?? "";
-                return s1.Contains("B") || s1.Contains("NC") || s2.Contains("B접점") || s2.Contains("NC");
+                string s1 = (DetailUnit ?? "").ToUpperInvariant();
+                string s2 = (Description ?? "").ToUpperInvariant();
+                return s1.Contains("B") || s1.Contains("NC") ||
+                       s2.Contains("B접점") || s2.Contains("NC");
             }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
+
         protected void OnPropertyChanged([CallerMemberName] string propName = null)
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
+        {
+            var h = PropertyChanged;
+            if (h != null)
+                h(this, new PropertyChangedEventArgs(propName));
+        }
     }
 }
