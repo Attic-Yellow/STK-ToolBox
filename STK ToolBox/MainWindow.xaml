@@ -51,6 +51,9 @@
             <TabItem Header="Device"
                      x:Name="DeviceTab"
                      PreviewMouseLeftButtonDown="TabItem_PreviewMouseLeftButtonDown"/>
+            <TabItem Header="DB"
+                 x:Name="DBTab"
+                 PreviewMouseLeftButtonDown="TabItem_PreviewMouseLeftButtonDown"/>
         </mah:MetroAnimatedSingleRowTabControl>
 
         <!-- 탭과 같은 높이에 맞춘 우상단 정보 표시(버전 • 빌드 • 제작자) -->
@@ -92,7 +95,8 @@
             <ContentControl x:Name="TeachingContent" Visibility="Collapsed"/>
             <ContentControl x:Name="ParameterContent" Visibility="Collapsed"/>
             <ContentControl x:Name="DeviceContent" Visibility="Collapsed"/>
-
+            <ContentControl x:Name="DBContent" Visibility="Collapsed"/>
+            
             <!-- AvalonDock (도킹 로그/툴바 용) -->
             <avalonDock:DockingManager x:Name="MainDockManager"  
                                        Grid.Column="1"

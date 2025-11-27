@@ -229,6 +229,7 @@
     <Compile Include="Helpers\MdFunc32Wrapper.cs" />
     <Compile Include="Helpers\NotePrompt.cs" />
     <Compile Include="Helpers\NullToVisibilityConverter.cs" />
+    <Compile Include="Models\IOByteSegment.cs" />
     <Compile Include="Models\IOMonitorItem.cs" />
     <Compile Include="ViewModels\BaseSource\BaseViewModel.cs" />
     <Compile Include="ViewModels\BaseSource\IoMonitorViewModelBase.cs" />
@@ -236,6 +237,7 @@
     <Compile Include="ViewModels\CellViewModel.cs" />
     <Compile Include="ViewModels\CredentialStore.cs" />
     <Compile Include="ViewModels\InverterViewModel.cs" />
+    <Compile Include="ViewModels\IOByteSheetViewModel.cs" />
     <Compile Include="ViewModels\IOCheckViewModel.cs" />
     <Compile Include="ViewModels\LimitCaculatorViewModel.cs" />
     <Compile Include="ViewModels\OriginAxisViewModel.cs" />
@@ -249,6 +251,9 @@
     <Compile Include="View\Control\InverterControl.xaml.cs">
       <DependentUpon>InverterControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="View\Control\IOByteSheetControl.xaml.cs">
+      <DependentUpon>IOByteSheetControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="View\Control\IOCheckControl.xaml.cs">
       <DependentUpon>IOCheckControl.xaml</DependentUpon>
     </Compile>
@@ -260,6 +265,9 @@
     </Compile>
     <Compile Include="View\CredentialDialog.xaml.cs">
       <DependentUpon>CredentialDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\DBPageView.xaml.cs">
+      <DependentUpon>DBPageView.xaml</DependentUpon>
     </Compile>
     <Compile Include="View\DevicePageView.xaml.cs">
       <DependentUpon>DevicePageView.xaml</DependentUpon>
@@ -300,6 +308,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="View\Control\IOByteSheetControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="View\Control\IOCheckControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -313,6 +325,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="View\CredentialDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\DBPageView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

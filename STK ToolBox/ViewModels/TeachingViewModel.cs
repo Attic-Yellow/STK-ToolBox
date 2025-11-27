@@ -331,7 +331,7 @@ namespace STK_ToolBox.ViewModels
             string filename = "TeachingSheet_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".xlsx";
             string path = System.IO.Path.Combine(SavePath, filename);
 
-            ExcelExporter.Export(cells, path, BasePitch, HoistPitches, ProfilePitch, Gap, BankInfos);
+            ExcelExporter.TeachingExcelExport(cells, path, BasePitch, HoistPitches, ProfilePitch, Gap, BankInfos);
             System.Windows.MessageBox.Show("엑셀 저장 완료\n" + path);
         });
         #endregion

@@ -14,5 +14,6 @@ namespace STK_ToolBox.Helpers
         public int Laxis { get; set; }
         public int Saxis { get; set; }
         public bool IsDead { get; set; }
+        public int ShelfSize { get; set; }
     }
 }

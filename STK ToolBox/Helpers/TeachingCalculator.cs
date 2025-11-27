@@ -29,6 +29,7 @@ namespace STK_ToolBox.Helpers
                         }
 
                         int hoistVal = bank.HoistValue;
+                        int shelfSize = 0;
 
                         if (level > bank.BaseLevel)
                         {
@@ -39,9 +40,20 @@ namespace STK_ToolBox.Helpers
                                 for (int k = 0; k < param.OtherLevels.Count; k++)
                                 {
                                     if (l > param.OtherLevels[k])
+                                    {
                                         idx = k + 1;
-                                    else
+                                        shelfSize = idx;
+                                    }
+                                    else if (l == param.OtherLevels[k])
+                                    {
+                                        shelfSize = k + 1;
                                         break;
+                                    }
+                                    else
+                                    {
+                                        shelfSize = k;
+                                        break;
+                                    }
                                 }
 
                                 if (param.HoistPitches.Count == 0)
@@ -62,9 +74,20 @@ namespace STK_ToolBox.Helpers
                                 for (int k = 0; k < param.OtherLevels.Count; k++)
                                 {
                                     if (l - 1 > param.OtherLevels[k])
+                                    {
                                         idx = k + 1;
-                                    else
+                                        shelfSize = idx;
+                                    }
+                                    else if (l == param.OtherLevels[k])
+                                    {
+                                        shelfSize = k + 1;
                                         break;
+                                    }
+                                    else
+                                    {
+                                        shelfSize = k;
+                                        break;
+                                    }
                                 }
 
                                 if (param.HoistPitches.Count == 0)
@@ -86,7 +109,8 @@ namespace STK_ToolBox.Helpers
                             Zaxis_Get = hoistVal,
                             Zaxis_Put = hoistVal + gap,
                             Laxis = bank.TurnValue,
-                            Saxis = bank.ForkValue
+                            Saxis = bank.ForkValue,
+                            ShelfSize = shelfSize
                         });
                     }
                 }
