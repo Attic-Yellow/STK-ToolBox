@@ -275,7 +275,7 @@ namespace STK_ToolBox.ViewModels
             sb.AppendLine("- \"IO Byte Sheet 엑셀 생성\" 버튼을 누르면 X/Y 각각 IOByteTable_X / IOByteTable_Y 시트로 내보냅니다.");
             sb.AppendLine();
             sb.AppendLine("※ StartAddr, Station 설정을 바꾸면 화면에 즉시 반영되며,");
-            sb.AppendLine("   엑셀에서는 StartAddr 열이 텍스트 형식으로 저장되어 3E0, 4E0 등이 그대로 표시됩니다.");
+            sb.AppendLine("   엑셀에서는 StartAddr 열이 텍스트 형식으로 저장됩니다.");
 
             MessageBox.Show(sb.ToString(),
                 "IO Byte Sheet 도움말",

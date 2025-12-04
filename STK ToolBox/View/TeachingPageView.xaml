@@ -106,7 +106,7 @@
                                     <!-- Torque Sheet -->
                                     <TabItem Header="토크 시트">
                                         <Border Background="White" CornerRadius="10" Padding="15" Margin="5">
-                                            <ConLayOut:TorqueAnakyzerControl />
+                                            <ConLayOut:TorqueAnalyzerControl />
                                             <!--  <TextBlock Text="추후 업데이트 예정"
                                                        VerticalAlignment="Center"
                                                        HorizontalAlignment="Center"
@@ -114,7 +114,14 @@
                                                        Foreground="Gray"/> -->
                                         </Border>
                                     </TabItem>
-
+                                    
+                                    <!-- Tact -->
+                                    <TabItem Header="Tact">
+                                        <Border Background="White" CornerRadius="10" Padding="15" Margin="5">
+                                            <ConLayOut:TactAnalyzerControl />
+                                        </Border>
+                                    </TabItem>
+                                    
                                     <!-- IO Check -->
                                     <TabItem Header="IO 체크">
                                         <Border Background="White" CornerRadius="10" Padding="15" Margin="5">

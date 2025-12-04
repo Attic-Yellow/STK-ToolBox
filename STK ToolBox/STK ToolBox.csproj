@@ -231,6 +231,7 @@
     <Compile Include="Helpers\NullToVisibilityConverter.cs" />
     <Compile Include="Models\IOByteSegment.cs" />
     <Compile Include="Models\IOMonitorItem.cs" />
+    <Compile Include="Models\TactAnalyzer.cs" />
     <Compile Include="Models\TorqueAnalyzer.cs" />
     <Compile Include="ViewModels\BaseSource\BaseViewModel.cs" />
     <Compile Include="ViewModels\BaseSource\IoMonitorViewModelBase.cs" />
@@ -244,6 +245,7 @@
     <Compile Include="ViewModels\OriginAxisViewModel.cs" />
     <Compile Include="ViewModels\ParameterPageViewModel.cs" />
     <Compile Include="ViewModels\BaseSource\ParamIniViewModelBase.cs" />
+    <Compile Include="ViewModels\TactAnalyzerViewModel.cs" />
     <Compile Include="ViewModels\TeachingViewModel.cs" />
     <Compile Include="ViewModels\TimeSyncViewModel.cs" />
     <Compile Include="ViewModels\TorqueAnalyzerViewModel.cs" />
@@ -262,11 +264,14 @@
     <Compile Include="View\Control\OriginAxisControl.xaml.cs">
       <DependentUpon>OriginAxisControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="View\Control\TactAnalyzerControl.xaml.cs">
+      <DependentUpon>TactAnalyzerControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="View\Control\TimeSyncControl.xaml.cs">
       <DependentUpon>TimeSyncControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="View\Control\TorqueAnakyzerControl.xaml.cs">
-      <DependentUpon>TorqueAnakyzerControl.xaml</DependentUpon>
+    <Compile Include="View\Control\TorqueAnalyzerControl.xaml.cs">
+      <DependentUpon>TorqueAnalyzerControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="View\CredentialDialog.xaml.cs">
       <DependentUpon>CredentialDialog.xaml</DependentUpon>
@@ -325,11 +330,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="View\Control\TactAnalyzerControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="View\Control\TimeSyncControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="View\Control\TorqueAnakyzerControl.xaml">
+    <Page Include="View\Control\TorqueAnalyzerControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

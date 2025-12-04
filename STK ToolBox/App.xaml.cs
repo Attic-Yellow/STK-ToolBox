@@ -21,7 +21,7 @@ namespace STK_ToolBox
         {
             bool createdNew;
 
-            // ★ 다른 프로그램과 절대 겹치지 않을 고유 이름으로!
+            // 다른 프로그램과 절대 겹치지 않을 고유 이름으로!
             _appMutex = new Mutex(true, "STK_ToolBox_SingleInstance_Mutex", out createdNew);
 
             if (!createdNew)

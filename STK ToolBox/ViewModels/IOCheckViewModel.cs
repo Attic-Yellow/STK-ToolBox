@@ -31,7 +31,7 @@ namespace STK_ToolBox.ViewModels
         public ICommand RefreshCommand { get; private set; }
         public ICommand HelpCommand { get; private set; }
 
-        // ★ 추가된 커맨드 4개
+        // 추가된 커맨드 4개
         public ICommand CheckAllCommand { get; private set; }
         public ICommand UncheckAllCommand { get; private set; }
         public ICommand CheckCurrentTabCommand { get; private set; }
@@ -49,7 +49,7 @@ namespace STK_ToolBox.ViewModels
             RefreshCommand = new RelayCommand(new Action(LoadIOStatus));
             HelpCommand = new RelayCommand(new Action(ShowHelp));
 
-            // ★ 커맨드 초기화
+            // 커맨드 초기화
             CheckAllCommand = new RelayCommand(new Action(CheckAllNotSpare));
             UncheckAllCommand = new RelayCommand(new Action(UncheckAllNotSpare));
             CheckCurrentTabCommand = new RelayCommand(new Action(CheckCurrentTabNotSpare));

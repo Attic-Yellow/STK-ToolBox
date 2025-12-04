@@ -1,0 +1,385 @@
+﻿<UserControl x:Class="STK_ToolBox.View.TactAnalyzerControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="#F5F7FA">
+
+    <!--   로컬 리소스 (팔레트/스타일)   -->
+    <UserControl.Resources>
+        <!-- 색 팔레트 -->
+        <SolidColorBrush x:Key="AccentBrush"           Color="#2F80ED"/>
+        <SolidColorBrush x:Key="CardBorderBrush"       Color="#D6DEEB"/>
+        <SolidColorBrush x:Key="CardBackgroundBrush"   Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="CardHeaderBrush"       Color="#F2F6FF"/>
+        <SolidColorBrush x:Key="TitleBrush"            Color="#102A43"/>
+        <SolidColorBrush x:Key="SubTextBrush"          Color="#627D98"/>
+
+        <!-- 카드 공통 -->
+        <Style x:Key="CardBorderStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+
+        <!-- 카드 헤더 바 -->
+        <Style x:Key="CardHeaderStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource CardHeaderBrush}"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="BorderBrush" Value="{StaticResource CardBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+        </Style>
+
+        <!-- 라벨 텍스트 -->
+        <Style x:Key="FormLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource TitleBrush}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,4,0"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+
+        <!-- 폼용 TextBox -->
+        <Style x:Key="FormTextBox" TargetType="TextBox">
+            <Setter Property="Height" Value="22"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,2,8,0"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!--   카드 1 : TACT 로그 분석   -->
+        <Border Grid.Row="0"
+                Style="{StaticResource CardBorderStyle}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <!-- 헤더 -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- 내용 -->
+                </Grid.RowDefinitions>
+
+                <!-- 헤더 영역 -->
+                <Border Grid.Row="0" Style="{StaticResource CardHeaderStyle}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="TACT 로그 분석"
+                                       FontSize="14"
+                                       FontWeight="Bold"
+                                       Foreground="{StaticResource TitleBrush}"/>
+                            <TextBlock Text="TACT 로그를 선택한 뒤 위치와 파라미터를 입력하고 [분석] 버튼을 눌러주세요."
+                                       FontSize="11"
+                                       Foreground="{StaticResource SubTextBrush}"
+                                       Margin="0,2,0,0"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1"
+                                    Orientation="Horizontal"
+                                    HorizontalAlignment="Right">
+                            <Button Content="📁 저장 폴더 선택"
+                                    Width="110"
+                                    Height="28"
+                                    Margin="0,0,8,0"
+                                    Command="{Binding SelectOutputDirCommand}" />
+                            <Button Content="📂 TACT 로그 선택"
+                                    Width="150"
+                                    Height="28"
+                                    Margin="0,0,8,0"
+                                    Command="{Binding SelectLogCommand}"/>
+                            <Button Content="🔍 분석"
+                                    Width="100"
+                                    Height="28"
+                                    Margin="0,0,8,0"
+                                    Command="{Binding AnalyzeCommand}"/>
+                            <Button Content="❔ 도움말"
+                                    Width="60"
+                                    Height="28"
+                                    Command="{Binding HelpCommand}"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- 내용 영역 -->
+                <Border Grid.Row="1"
+                        Background="{StaticResource CardBackgroundBrush}"
+                        Padding="12">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <!-- 위치 헤더줄 -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- BANK/BAY/LEVEL -->
+                            <RowDefinition Height="8"/>
+                            <RowDefinition Height="Auto"/>
+                            <!-- 거리 -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- 속도 -->
+                            <RowDefinition Height="Auto"/>
+                            <!-- Acc + 사이클 -->
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <!-- FROM -->
+                            <ColumnDefinition Width="24"/>
+                            <ColumnDefinition Width="*"/>
+                            <!-- TO -->
+                        </Grid.ColumnDefinitions>
+
+                        <!-- 위치 헤더 바 (FROM / TO 이름만) -->
+                        <Grid Grid.Row="0" Grid.ColumnSpan="3" Margin="0,0,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="24"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0"
+                                       Text="위치 1 (FROM)"
+                                       FontWeight="Bold"
+                                       Foreground="{StaticResource TitleBrush}"/>
+
+                            <TextBlock Grid.Column="2"
+                                       Text="위치 2 (TO)"
+                                       FontWeight="Bold"
+                                       Foreground="{StaticResource TitleBrush}"/>
+                        </Grid>
+
+                        <!-- BANK / BAY / LEVEL : 2줄 구조 -->
+                        <Grid Grid.Row="1" Grid.ColumnSpan="3">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="24"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- FROM -->
+                            <Grid Grid.Column="0" Margin="0,0,8,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- 라벨 -->
+                                <TextBlock Grid.Row="0" Grid.Column="0"
+                                           Text="BANK"
+                                           HorizontalAlignment="Center"
+                                           Style="{StaticResource FormLabel}"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1"
+                                           Text="BAY"
+                                           HorizontalAlignment="Center"
+                                           Style="{StaticResource FormLabel}"/>
+                                <TextBlock Grid.Row="0" Grid.Column="2"
+                                           Text="LEVEL"
+                                           HorizontalAlignment="Center"
+                                           Style="{StaticResource FormLabel}"/>
+
+                                <!-- 입력 -->
+                                <TextBox Grid.Row="1" Grid.Column="0"
+                                         Style="{StaticResource FormTextBox}"
+                                         HorizontalAlignment="Stretch"
+                                         ToolTip="FROM 위치의 BANK (정수, 0이면 필터 제외)"
+                                         Text="{Binding Bank1, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBox Grid.Row="1" Grid.Column="1"
+                                         Style="{StaticResource FormTextBox}"
+                                         HorizontalAlignment="Stretch"
+                                         ToolTip="FROM 위치의 BAY (정수, 0이면 필터 제외)"
+                                         Text="{Binding Bay1, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBox Grid.Row="1" Grid.Column="2"
+                                         Style="{StaticResource FormTextBox}"
+                                         HorizontalAlignment="Stretch"
+                                         ToolTip="FROM 위치의 LEVEL (정수, 0이면 필터 제외)"
+                                         Text="{Binding Level1, UpdateSourceTrigger=PropertyChanged}"/>
+                            </Grid>
+
+                            <!-- TO -->
+                            <Grid Grid.Column="2" Margin="8,0,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- 라벨 -->
+                                <TextBlock Grid.Row="0" Grid.Column="0"
+                                           Text="BANK"
+                                           HorizontalAlignment="Center"
+                                           Style="{StaticResource FormLabel}"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1"
+                                           Text="BAY"
+                                           HorizontalAlignment="Center"
+                                           Style="{StaticResource FormLabel}"/>
+                                <TextBlock Grid.Row="0" Grid.Column="2"
+                                           Text="LEVEL"
+                                           HorizontalAlignment="Center"
+                                           Style="{StaticResource FormLabel}"/>
+
+                                <!-- 입력 -->
+                                <TextBox Grid.Row="1" Grid.Column="0"
+                                         Style="{StaticResource FormTextBox}"
+                                         HorizontalAlignment="Stretch"
+                                         ToolTip="TO 위치의 BANK (정수, 0이면 필터 제외)"
+                                         Text="{Binding Bank2, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBox Grid.Row="1" Grid.Column="1"
+                                         Style="{StaticResource FormTextBox}"
+                                         HorizontalAlignment="Stretch"
+                                         ToolTip="TO 위치의 BAY (정수, 0이면 필터 제외)"
+                                         Text="{Binding Bay2, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBox Grid.Row="1" Grid.Column="2"
+                                         Style="{StaticResource FormTextBox}"
+                                         HorizontalAlignment="Stretch"
+                                         ToolTip="TO 위치의 LEVEL (정수, 0이면 필터 제외)"
+                                         Text="{Binding Level2, UpdateSourceTrigger=PropertyChanged}"/>
+                            </Grid>
+                        </Grid>
+
+                        <!-- 거리 -->
+                        <Grid Grid.Row="3" Grid.ColumnSpan="3" Margin="0,0,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="24"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                <TextBlock Text="Base 거리" Style="{StaticResource FormLabel}" Width="70"/>
+                                <TextBox Width="90"
+                                         Style="{StaticResource FormTextBox}"
+                                         ToolTip="Base 축 이동 거리 (mm 등 단위 메모용)"
+                                         Text="{Binding BaseDistance, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                <TextBlock Text="Hoist 거리" Style="{StaticResource FormLabel}" Width="70"/>
+                                <TextBox Width="90"
+                                         Style="{StaticResource FormTextBox}"
+                                         ToolTip="Hoist 축 이동 거리 (mm 등 단위 메모용)"
+                                         Text="{Binding HoistDistance, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- 속도 -->
+                        <Grid Grid.Row="4" Grid.ColumnSpan="3" Margin="0,0,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="24"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                <TextBlock Text="Up 속도" Style="{StaticResource FormLabel}" Width="70"/>
+                                <TextBox Width="90"
+                                         Style="{StaticResource FormTextBox}"
+                                         ToolTip="상승 방향 Hoist 속도 (예: mm/min)"
+                                         Text="{Binding UpSpeed, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                                <TextBlock Text="Down 속도" Style="{StaticResource FormLabel}" Width="70"/>
+                                <TextBox Width="90"
+                                         Style="{StaticResource FormTextBox}"
+                                         ToolTip="하강 방향 Hoist 속도 (예: mm/min)"
+                                         Text="{Binding DownSpeed, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Acc + 사이클 개수 -->
+                        <Grid Grid.Row="5" Grid.ColumnSpan="3" Margin="0,2,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="24"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                <TextBlock Text="Up Acc" Style="{StaticResource FormLabel}" Width="70"/>
+                                <TextBox Width="90"
+                                         Style="{StaticResource FormTextBox}"
+                                         ToolTip="상승 방향 가속도 (ACC 설정값 메모)"
+                                         Text="{Binding UpAcc, UpdateSourceTrigger=PropertyChanged}"/>
+                                <TextBlock Text="Down Acc" Style="{StaticResource FormLabel}" Width="70" Margin="8,0,0,0"/>
+                                <TextBox Width="90"
+                                         Style="{StaticResource FormTextBox}"
+                                         ToolTip="하강 방향 가속도 (DEC/ACC 설정값 메모)"
+                                         Text="{Binding DownAcc, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2"
+                                        Orientation="Horizontal"
+                                        HorizontalAlignment="Right">
+                                <TextBlock Text="사이클 개수"
+                                           Style="{StaticResource FormLabel}"
+                                           Margin="0,0,4,0"/>
+                                <TextBox Width="60" Height="22"
+                                         VerticalContentAlignment="Center"
+                                         ToolTip="가장 최근 사이클부터 통계에 사용할 사이클 개수 (정수)"
+                                         Text="{Binding CycleCountText, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!--   카드 2 : 분석 결과   -->
+        <Border Grid.Row="1"
+                Style="{StaticResource CardBorderStyle}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- 헤더 -->
+                <Border Grid.Row="0" Style="{StaticResource CardHeaderStyle}">
+                    <TextBlock Text="분석 결과"
+                               FontSize="13"
+                               FontWeight="Bold"
+                               Foreground="{StaticResource TitleBrush}"/>
+                </Border>
+
+                <!-- 내용 -->
+                <Border Grid.Row="1"
+                        Background="{StaticResource CardBackgroundBrush}"
+                        Padding="10">
+                    <TextBox FontFamily="Consolas"
+                             FontSize="13"
+                             IsReadOnly="True"
+                             TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"
+                             HorizontalScrollBarVisibility="Auto"
+                             AcceptsReturn="True"
+                             ToolTip="TACT 분석 결과 요약이 표시되는 영역입니다."
+                             Text="{Binding PreviewText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </Border>
+            </Grid>
+        </Border>
+
+        <!--   하단 : 상태 표시줄   -->
+        <StatusBar Grid.Row="2" Margin="0,4,0,0">
+            <StatusBarItem>
+                <TextBlock Text="{Binding StatusText}"
+                           Foreground="{StaticResource TitleBrush}"/>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</UserControl>
