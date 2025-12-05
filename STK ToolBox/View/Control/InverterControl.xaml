@@ -130,42 +130,50 @@
         <!-- 상단 영역: 저장/불러오기/도움말 + 일괄 제어 버튼 -->
         <StackPanel Grid.Row="0"
                     Orientation="Vertical"
-                    Margin="0,0,0,10">
+                    Margin="0,0,0,10"
+                    ToolTip="인버터 IO 상태를 저장·불러오고, 전체 컨베이어를 일괄 제어하는 영역입니다.">
             <!-- 저장/불러오기/도움말 -->
             <StackPanel Orientation="Horizontal"
                         Margin="0,0,0,4">
                 <Button Content="저장하기"
                         Command="{Binding SaveCommand}"
                         Margin="0,0,8,0"
-                        Height="28"/>
+                        Height="28"
+                        ToolTip="현재 체크 상태 및 메모, IO 상태 정보를 파일로 저장합니다."/>
                 <Button Content="불러오기"
                         Command="{Binding LoadStateCommand}"
                         Margin="0,0,8,0"
-                        Height="28"/>
+                        Height="28"
+                        ToolTip="이전에 저장해 둔 인버터 IO 상태 정보를 불러옵니다."/>
                 <Button Content="도움말"
                         Command="{Binding HelpCommand}"
-                        Height="28"/>
+                        Height="28"
+                        ToolTip="인버터 모니터·제어 화면 사용법을 안내합니다."/>
             </StackPanel>
 
             <!-- 일괄 제어 헤더 -->
             <TextBlock Text="일괄 제어 (전체 CONV 대상)"
                        FontSize="12"
                        Foreground="#6B7280"
-                       Margin="0,4,0,4"/>
+                       Margin="0,4,0,4"
+                       ToolTip="현재 화면에 표시된 모든 컨베이어에 대해 정·역방향, 고·저속 신호를 일괄로 제어합니다." />
 
             <!-- 고속 일괄 제어 -->
             <StackPanel Orientation="Horizontal"
-                        Margin="0,0,0,2">
+                        Margin="0,0,0,2"
+                        ToolTip="전체 컨베이어에 대해 고속 운전 신호를 일괄로 ON/OFF 합니다.">
                 <TextBlock Text="고속 :"
                            Width="48"
                            VerticalAlignment="Center"
-                           Margin="0,0,4,0"/>
+                           Margin="0,0,4,0"
+                           ToolTip="고속 운전 신호 일괄 제어 영역입니다." />
 
                 <!-- 정방향 고속 -->
                 <Button Command="{Binding AllForwardHighToggleCommand}"
                         Margin="0,0,8,0"
                         Height="28"
-                        MinWidth="130">
+                        MinWidth="130"
+                        ToolTip="전체 컨베이어 정방향 고속 출력을 ON/OFF 합니다.">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Padding" Value="12,2"/>
@@ -184,7 +192,8 @@
                 <!-- 역방향 고속 -->
                 <Button Command="{Binding AllReverseHighToggleCommand}"
                         Height="28"
-                        MinWidth="130">
+                        MinWidth="130"
+                        ToolTip="전체 컨베이어 역방향 고속 출력을 ON/OFF 합니다.">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Padding" Value="12,2"/>
@@ -201,17 +210,20 @@
             </StackPanel>
 
             <!-- 저속 일괄 제어 -->
-            <StackPanel Orientation="Horizontal">
+            <StackPanel Orientation="Horizontal"
+                        ToolTip="전체 컨베이어에 대해 저속 운전 신호를 일괄로 ON/OFF 합니다.">
                 <TextBlock Text="저속 :"
                            Width="48"
                            VerticalAlignment="Center"
-                           Margin="0,0,4,0"/>
+                           Margin="0,0,4,0"
+                           ToolTip="저속 운전 신호 일괄 제어 영역입니다." />
 
                 <!-- 정방향 저속 -->
                 <Button Command="{Binding AllForwardLowToggleCommand}"
                         Margin="0,0,8,0"
                         Height="28"
-                        MinWidth="130">
+                        MinWidth="130"
+                        ToolTip="전체 컨베이어 정방향 저속 출력을 ON/OFF 합니다.">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Padding" Value="12,2"/>
@@ -229,7 +241,8 @@
                 <!-- 역방향 저속 -->
                 <Button Command="{Binding AllReverseLowToggleCommand}"
                         Height="28"
-                        MinWidth="130">
+                        MinWidth="130"
+                        ToolTip="전체 컨베이어 역방향 저속 출력을 ON/OFF 합니다.">
                     <Button.Style>
                         <Style TargetType="Button">
                             <Setter Property="Padding" Value="12,2"/>
@@ -265,7 +278,8 @@
                   AlternationCount="2"
                   AlternatingRowBackground="#FBFCFE"
                   SelectionMode="Single"
-                  SelectionUnit="FullRow">
+                  SelectionUnit="FullRow"
+                  ToolTip="컨베이어별 정·역방향, 고·저속 IO 상태를 확인하고 개별 출력 토글과 체크, 메모를 관리하는 그리드입니다.">
 
             <DataGrid.Resources>
                 <Style TargetType="DataGridCell" BasedOn="{StaticResource CellStyle}">
@@ -281,7 +295,8 @@
                         <DataTemplate>
                             <Border Background="#F3F4F6"
                                     Padding="8"
-                                    Margin="0,4,0,0">
+                                    Margin="0,4,0,0"
+                                    ToolTip="하나의 CONV(컨베이어) 그룹입니다. 아래 행들이 같은 Unit에 해당하는 IO 들입니다.">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="{Binding Name}"
                                                FontWeight="Bold"
@@ -306,16 +321,28 @@
                 <!-- CONV ID + 방향/스테이션 -->
                 <DataGridTextColumn Header="CONV"
                                     Binding="{Binding Unit}"
-                                    Width="190"/>
+                                    Width="190">
+                    <DataGridTextColumn.HeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="ToolTip" Value="컨베이어 ID 및 구분 정보입니다."/>
+                        </Style>
+                    </DataGridTextColumn.HeaderStyle>
+                </DataGridTextColumn>
 
                 <!-- 기능명 (정방향/역방향/저속/고속) -->
                 <DataGridTextColumn Header="MODE"
                                     Binding="{Binding IOName}"
                                     Width="100">
+                    <DataGridTextColumn.HeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="ToolTip" Value="각 IO가 담당하는 모드(정방향, 역방향, 고속, 저속 등)입니다."/>
+                        </Style>
+                    </DataGridTextColumn.HeaderStyle>
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock"
                                BasedOn="{StaticResource IoNameText}">
                             <Setter Property="HorizontalAlignment" Value="Center"/>
+                            <Setter Property="ToolTip" Value="이 IO가 담당하는 운전 모드 이름입니다."/>
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                     <DataGridTextColumn.CellStyle>
@@ -330,8 +357,16 @@
                 <DataGridTextColumn Header="ADDR"
                                     Binding="{Binding Address}"
                                     Width="90">
+                    <DataGridTextColumn.HeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="ToolTip" Value="CC-Link X / Y 디바이스 주소입니다."/>
+                        </Style>
+                    </DataGridTextColumn.HeaderStyle>
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock" BasedOn="{StaticResource AddrText}"/>
+                        <Style TargetType="TextBlock"
+                               BasedOn="{StaticResource AddrText}">
+                            <Setter Property="ToolTip" Value="해당 IO가 매핑된 실제 X/Y 주소입니다."/>
+                        </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
@@ -339,10 +374,29 @@
                 <DataGridCheckBoxColumn Header="STAT"
                                         Binding="{Binding CurrentState}"
                                         IsReadOnly="True"
-                                        Width="70"/>
+                                        Width="70">
+                    <DataGridCheckBoxColumn.HeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="ToolTip" Value="현재 IO 출력 상태입니다. 체크되면 ON 상태를 의미합니다."/>
+                        </Style>
+                    </DataGridCheckBoxColumn.HeaderStyle>
+                    <DataGridCheckBoxColumn.ElementStyle>
+                        <Style TargetType="CheckBox">
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="IsHitTestVisible" Value="False"/>
+                            <Setter Property="ToolTip" Value="현재 CC-Link에서 읽은 IO의 ON/OFF 상태입니다."/>
+                        </Style>
+                    </DataGridCheckBoxColumn.ElementStyle>
+                </DataGridCheckBoxColumn>
 
                 <!-- OUTPUT -->
                 <DataGridTemplateColumn Header="OUTPUT" Width="85">
+                    <DataGridTemplateColumn.HeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="ToolTip" Value="해당 Y 출력 신호를 ON/OFF로 토글합니다. X 입력은 제어할 수 없습니다."/>
+                        </Style>
+                    </DataGridTemplateColumn.HeaderStyle>
                     <DataGridTemplateColumn.CellStyle>
                         <Style TargetType="DataGridCell"
                                BasedOn="{StaticResource CellStyleOutputCol}"/>
@@ -353,7 +407,8 @@
                                     MinWidth="64"
                                     FontSize="12"
                                     Command="{Binding DataContext.ToggleOutputCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                    CommandParameter="{Binding}">
+                                    CommandParameter="{Binding}"
+                                    ToolTip="이 IO의 Y 출력을 직접 ON/OFF 합니다. 안전에 유의하여 사용하세요.">
                                 <Button.Style>
                                     <Style TargetType="Button"
                                            BasedOn="{StaticResource ToggleBtnStyle}">
@@ -369,18 +424,29 @@
 
                 <!-- CHECK -->
                 <DataGridTemplateColumn Header="CHECK" Width="80">
+                    <DataGridTemplateColumn.HeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="ToolTip" Value="검사 대상 또는 중요 IO로 표시할 때 사용합니다."/>
+                        </Style>
+                    </DataGridTemplateColumn.HeaderStyle>
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                       Focusable="False"
                                       HorizontalAlignment="Center"
-                                      VerticalAlignment="Center"/>
+                                      VerticalAlignment="Center"
+                                      ToolTip="이 IO를 체크 리스트 대상 또는 중요 항목으로 표시합니다."/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
                 <!-- 메모 -->
                 <DataGridTemplateColumn Header="메모" Width="70">
+                    <DataGridTemplateColumn.HeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="ToolTip" Value="해당 IO에 대한 작업 메모를 작성하거나 수정합니다."/>
+                        </Style>
+                    </DataGridTemplateColumn.HeaderStyle>
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Button Content="메모"
@@ -388,7 +454,8 @@
                                     MinWidth="56"
                                     FontSize="12"
                                     Command="{Binding DataContext.OpenNoteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                    CommandParameter="{Binding}"/>
+                                    CommandParameter="{Binding}"
+                                    ToolTip="이 IO에 대한 비고/특이사항을 메모로 기록하거나 수정합니다."/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
@@ -396,15 +463,18 @@
         </DataGrid>
 
         <!-- 하단 상태 -->
-        <DockPanel Grid.Row="2" Margin="0,8,0,0">
+        <DockPanel Grid.Row="2" Margin="0,8,0,0"
+                   ToolTip="현재 CC-Link 보드 연결 상태와 상태 저장 파일 경로를 표시합니다.">
             <TextBlock DockPanel.Dock="Left"
                        Text="{Binding HwStatusText}"
                        Foreground="{Binding HwStatusBrush}"
                        FontWeight="SemiBold"
-                       Margin="0,0,12,0"/>
+                       Margin="0,0,12,0"
+                       ToolTip="CC-Link 보드 연결 여부 및 통신 상태를 나타냅니다."/>
             <TextBlock Text="{Binding StateFilePath}"
                        Foreground="#6B7280"
-                       FontSize="11"/>
+                       FontSize="11"
+                       ToolTip="현재 사용 중인 인버터 상태 저장 파일의 전체 경로입니다."/>
         </DockPanel>
     </Grid>
 </UserControl>

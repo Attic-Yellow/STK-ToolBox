@@ -15,7 +15,7 @@
             <Setter Property="Foreground" Value="#1E1E1E"/>
             <Setter Property="Margin" Value="0,2,0,2"/>
         </Style>
-        
+
         <!-- 버튼 스타일 -->
         <Style x:Key="CellButtonStyle" TargetType="Button">
             <Setter Property="Margin" Value="2"/>
@@ -68,7 +68,8 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid Background="#F3F8FC">
+    <Grid Background="#F3F8FC"
+          ToolTip="STK Teaching Sheet를 자동 생성하는 도구입니다. 피치/Bank/Bay/Level과 Dead Cell 맵을 설정한 후 엑셀로 저장합니다.">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <!-- 1: 피치/갭 -->
@@ -88,7 +89,12 @@
             <!-- 8: 엑셀 저장 -->
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Grid.RowSpan="5" Background="#E7ECF7" BorderBrush="#C3CCD7" BorderThickness="0,0,0,1">
+        <Border Grid.Row="0"
+                Grid.RowSpan="5"
+                Background="#E7ECF7"
+                BorderBrush="#C3CCD7"
+                BorderThickness="0,0,0,1"
+                ToolTip="Teaching 계산에 필요한 기본 파라미터를 설정하는 영역입니다.">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <!-- 좌측: 기존 입력 영역 -->
@@ -99,64 +105,188 @@
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="16,14,16,8">
                         <!-- Base Pitch ... -->
-                        <TextBlock Text="Base Pitch" VerticalAlignment="Center" Foreground="#2C405A" FontSize="13" Margin="0,0,12,0"/>
-                        <TextBox Text="{Binding BasePitch, UpdateSourceTrigger=PropertyChanged}" Width="80" FontSize="13" Margin="0,0,18,0"/>
-                        <TextBlock Text="Profile Pitch" VerticalAlignment="Center" Foreground="#2C405A" FontSize="13" Margin="0,0,12,0"/>
-                        <TextBox Text="{Binding ProfilePitch, UpdateSourceTrigger=PropertyChanged}" Width="80" FontSize="13" Margin="0,0,18,0"/>
-                        <TextBlock Text="Get-Put Gap" VerticalAlignment="Center" Foreground="#2C405A" FontSize="13" Margin="0,0,12,0"/>
-                        <TextBox Text="{Binding Gap, UpdateSourceTrigger=PropertyChanged}" Width="80" FontSize="13" Margin="0,0,18,0"/>
+                        <TextBlock Text="Base Pitch"
+                                   VerticalAlignment="Center"
+                                   Foreground="#2C405A"
+                                   FontSize="13"
+                                   Margin="0,0,12,0"
+                                   ToolTip="Bank 기준 Base 이동 피치입니다. (예: Bay 간 이동 거리)"/>
+                        <TextBox Text="{Binding BasePitch, UpdateSourceTrigger=PropertyChanged}"
+                                 Width="80"
+                                 FontSize="13"
+                                 Margin="0,0,18,0"
+                                 ToolTip="Base Pitch 값을 숫자로 입력합니다. (장비 기준 단위 사용)"/>
+                        <TextBlock Text="Profile Pitch"
+                                   VerticalAlignment="Center"
+                                   Foreground="#2C405A"
+                                   FontSize="13"
+                                   Margin="0,0,12,0"
+                                   ToolTip="프로파일 구간 사이의 Pitch입니다."/>
+                        <TextBox Text="{Binding ProfilePitch, UpdateSourceTrigger=PropertyChanged}"
+                                 Width="80"
+                                 FontSize="13"
+                                 Margin="0,0,18,0"
+                                 ToolTip="Profile Pitch 값을 숫자로 입력합니다."/>
+                        <TextBlock Text="Get-Put Gap"
+                                   VerticalAlignment="Center"
+                                   Foreground="#2C405A"
+                                   FontSize="13"
+                                   Margin="0,0,12,0"
+                                   ToolTip="GET/PUT 시 사용되는 추가 Gap(여유거리)입니다."/>
+                        <TextBox Text="{Binding Gap, UpdateSourceTrigger=PropertyChanged}"
+                                 Width="80"
+                                 FontSize="13"
+                                 Margin="0,0,18,0"
+                                 ToolTip="Get-Put Gap 값을 숫자로 입력합니다. (예: mm 또는 pulse)"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="16,0,16,8">
                         <!-- Hoist Pitch ... -->
-                        <TextBlock Text="Hoist Pitch" VerticalAlignment="Center" Foreground="#2C405A" FontSize="13" Margin="0,0,12,0"/>
-                        <TextBox Text="{Binding HoistPitchInput, UpdateSourceTrigger=PropertyChanged}" Width="443" FontSize="13" Margin="0"/>
+                        <TextBlock Text="Hoist Pitch"
+                                   VerticalAlignment="Center"
+                                   Foreground="#2C405A"
+                                   FontSize="13"
+                                   Margin="0,0,12,0"
+                                   ToolTip="호이스트(Level 방향) 피치 목록입니다."/>
+                        <TextBox Text="{Binding HoistPitchInput, UpdateSourceTrigger=PropertyChanged}"
+                                 Width="443"
+                                 FontSize="13"
+                                 Margin="0"
+                                 ToolTip="호이스트 피치를 구분자(쉼표 또는 공백)로 나열해서 입력합니다. 예) 2,2,3,3,2 ..."/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="16,0,16,8">
                         <!-- Profile Bay ... -->
-                        <TextBlock Text="Profile Bay" VerticalAlignment="Center" Foreground="#2C405A" FontSize="13" Margin="0,0,12,0"/>
-                        <TextBox Text="{Binding ProfileBayInput, UpdateSourceTrigger=PropertyChanged}" Width="445" FontSize="13" Margin="0"/>
+                        <TextBlock Text="Profile Bay"
+                                   VerticalAlignment="Center"
+                                   Foreground="#2C405A"
+                                   FontSize="13"
+                                   Margin="0,0,12,0"
+                                   ToolTip="프로파일 구간에 해당하는 Bay 번호 목록입니다."/>
+                        <TextBox Text="{Binding ProfileBayInput, UpdateSourceTrigger=PropertyChanged}"
+                                 Width="445"
+                                 FontSize="13"
+                                 Margin="0"
+                                 ToolTip="Profile이 적용되는 Bay 번호를 나열합니다. 예) 1-5,7-10 또는 1,2,3,4 ..."/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="16,0,16,8">
                         <!-- Other Level ... -->
-                        <TextBlock Text="Other Level" VerticalAlignment="Center" Foreground="#2C405A" FontSize="13" Margin="0,0,12,0"/>
-                        <TextBox Text="{Binding OtherLevelInput, UpdateSourceTrigger=PropertyChanged}" Width="440" FontSize="13" Margin="0"/>
+                        <TextBlock Text="Other Level"
+                                   VerticalAlignment="Center"
+                                   Foreground="#2C405A"
+                                   FontSize="13"
+                                   Margin="0,0,12,0"
+                                   ToolTip="Profile 구간 외에 특별한 Level 설정이 필요한 경우 사용합니다."/>
+                        <TextBox Text="{Binding OtherLevelInput, UpdateSourceTrigger=PropertyChanged}"
+                                 Width="440"
+                                 FontSize="13"
+                                 Margin="0"
+                                 ToolTip="추가 Level 구간을 정의합니다. (형식은 프로젝트 규칙에 맞게 입력)"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="16,0,16,8">
                         <!-- 총 Bank ... 맵 생성 버튼 -->
-                        <TextBlock Text="총 Bank" VerticalAlignment="Center" Foreground="#2C405A" FontWeight="Bold" FontSize="13" Margin="0,0,8,0"/>
-                        <TextBox Text="{Binding TotalBank, UpdateSourceTrigger=PropertyChanged}" Width="48" FontSize="13" Margin="0,0,18,0"/>
-                        <TextBlock Text="총 Bay" VerticalAlignment="Center" Foreground="#2C405A" FontWeight="Bold" FontSize="13" Margin="0,0,8,0"/>
-                        <TextBox Text="{Binding TotalBay, UpdateSourceTrigger=PropertyChanged}" Width="48" FontSize="13" Margin="0,0,18,0"/>
-                        <TextBlock Text="총 Level" VerticalAlignment="Center" Foreground="#2C405A" FontWeight="Bold" FontSize="13" Margin="0,0,8,0"/>
-                        <TextBox Text="{Binding TotalLevel, UpdateSourceTrigger=PropertyChanged}" Width="48" FontSize="13" Margin="0,0,18,0"/>
-                        <Button Content="맵 생성" Command="{Binding GenerateMapCommand}"
-                            Margin="0,0,0,0" Padding="20,5"
-                            Background="#2264BC" Foreground="White"
-                            BorderThickness="0" FontWeight="Bold" FontSize="13" Cursor="Hand"/>
+                        <TextBlock Text="총 Bank"
+                                   VerticalAlignment="Center"
+                                   Foreground="#2C405A"
+                                   FontWeight="Bold"
+                                   FontSize="13"
+                                   Margin="0,0,8,0"
+                                   ToolTip="Teaching 대상 Stocker의 Bank 개수입니다."/>
+                        <TextBox Text="{Binding TotalBank, UpdateSourceTrigger=PropertyChanged}"
+                                 Width="48"
+                                 FontSize="13"
+                                 Margin="0,0,18,0"
+                                 ToolTip="총 Bank 수를 입력합니다."/>
+                        <TextBlock Text="총 Bay"
+                                   VerticalAlignment="Center"
+                                   Foreground="#2C405A"
+                                   FontWeight="Bold"
+                                   FontSize="13"
+                                   Margin="0,0,8,0"
+                                   ToolTip="각 Bank 당 Bay 개수입니다."/>
+                        <TextBox Text="{Binding TotalBay, UpdateSourceTrigger=PropertyChanged}"
+                                 Width="48"
+                                 FontSize="13"
+                                 Margin="0,0,18,0"
+                                 ToolTip="총 Bay 수를 입력합니다."/>
+                        <TextBlock Text="총 Level"
+                                   VerticalAlignment="Center"
+                                   Foreground="#2C405A"
+                                   FontWeight="Bold"
+                                   FontSize="13"
+                                   Margin="0,0,8,0"
+                                   ToolTip="각 Bay 당 Level 개수입니다."/>
+                        <TextBox Text="{Binding TotalLevel, UpdateSourceTrigger=PropertyChanged}"
+                                 Width="48"
+                                 FontSize="13"
+                                 Margin="0,0,18,0"
+                                 ToolTip="총 Level 수를 입력합니다."/>
+                        <Button Content="맵 생성"
+                                Command="{Binding GenerateMapCommand}"
+                                Margin="0,0,0,0"
+                                Padding="20,5"
+                                Background="#2264BC"
+                                Foreground="White"
+                                BorderThickness="0"
+                                FontWeight="Bold"
+                                FontSize="13"
+                                Cursor="Hand"
+                                ToolTip="입력된 Total Bank/Bay/Level 및 피치 정보를 기반으로 Bank/Bay/Level 맵을 생성합니다. (Dead Cell 설정용 그리드 생성)"/>
                     </StackPanel>
                 </StackPanel>
 
                 <!-- ===== 우측: 설정 저장/불러오기 패널 ===== -->
-                <Border Grid.Column="1" Margin="16,14,16,8" Background="#E9EEF8" CornerRadius="12" Padding="14" BorderBrush="#C9D5EA" BorderThickness="1">
+                <Border Grid.Column="1"
+                        Margin="16,14,16,8"
+                        Background="#E9EEF8"
+                        CornerRadius="12"
+                        Padding="14"
+                        BorderBrush="#C9D5EA"
+                        BorderThickness="1"
+                        ToolTip="Teaching Sheet 생성에 사용되는 모든 설정값을 프리셋(JSON)으로 저장하거나 불러올 수 있습니다.">
                     <StackPanel>
-                        <TextBlock Text="설정 저장 / 불러오기" FontWeight="Bold" FontSize="14" Foreground="#2C405A" Margin="0,0,0,10"/>
+                        <TextBlock Text="설정 저장 / 불러오기"
+                                   FontWeight="Bold"
+                                   FontSize="14"
+                                   Foreground="#2C405A"
+                                   Margin="0,0,0,10"/>
                         <TextBlock Text="현재 입력된 모든 값(피치, Profile Bay, Other Level, 총 Bank/Bay/Level, 기준열 값들)을 JSON 파일로 저장하거나 다시 불러올 수 있습니다." 
-                           TextWrapping="Wrap" FontSize="12" Foreground="#3B4F6B" Margin="0,0,0,12"/>
-
+                                   TextWrapping="Wrap"
+                                   FontSize="12"
+                                   Foreground="#3B4F6B"
+                                   Margin="0,0,0,12"/>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                            <Button Content="설정 저장" Command="{Binding SavePresetCommand}" Padding="16,6" FontWeight="Bold" />
-                            <Button Content="설정 불러오기" Command="{Binding LoadPresetCommand}" Padding="16,6" FontWeight="Bold" Margin="8,0,0,0"/>
+                            <Button Content="설정 저장"
+                                    Command="{Binding SavePresetCommand}"
+                                    Padding="16,6"
+                                    FontWeight="Bold"
+                                    ToolTip="현재 화면에 입력된 모든 설정을 프리셋(JSON) 파일로 저장합니다."/>
+                            <Button Content="설정 불러오기"
+                                    Command="{Binding LoadPresetCommand}"
+                                    Padding="16,6"
+                                    FontWeight="Bold"
+                                    Margin="8,0,0,0"
+                                    ToolTip="저장해 둔 프리셋(JSON) 파일을 불러와 입력값을 한 번에 세팅합니다."/>
                         </StackPanel>
 
-                        <TextBlock Text="최근 파일" FontSize="12" Foreground="#586E8C"/>
-                        <TextBlock Text="{Binding LastPresetPath}" FontSize="11" Foreground="#334D80" TextWrapping="Wrap" />
+                        <TextBlock Text="최근 파일"
+                                   FontSize="12"
+                                   Foreground="#586E8C"
+                                   ToolTip="마지막으로 사용한 프리셋 파일 경로입니다."/>
+                        <TextBlock Text="{Binding LastPresetPath}"
+                                   FontSize="11"
+                                   Foreground="#334D80"
+                                   TextWrapping="Wrap"
+                                   ToolTip="최근에 저장/불러온 프리셋(JSON) 파일의 전체 경로입니다."/>
                     </StackPanel>
                 </Border>
             </Grid>
         </Border>
 
-         <!-- 6. Bank별 기준값 DataGrid (RowSpan, Margin/Height 정리) -->
-        <Border Grid.Row="5" Background="#FFFFFF" BorderBrush="#C3CCD7" BorderThickness="0,0,0,1">
+        <!-- 6. Bank별 기준값 DataGrid (RowSpan, Margin/Height 정리) -->
+        <Border Grid.Row="5"
+                Background="#FFFFFF"
+                BorderBrush="#C3CCD7"
+                BorderThickness="0,0,0,1"
+                ToolTip="각 Bank별 기준 Bay/Level 및 Base/Hoist/Turn/Fork 값(기준 Teaching 값)을 설정하는 표입니다.">
             <DataGrid
                 ItemsSource="{Binding BankInfos}" AutoGenerateColumns="False"
                 CanUserAddRows="False" Margin="16,0,16,0" HeadersVisibility="Column"
@@ -164,101 +294,194 @@
                 Background="#FFFFFF"
                 Height="120">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Bank"  Binding="{Binding BankNumber}" IsReadOnly="True" />
-                    <DataGridTextColumn Header="Bay" Binding="{Binding BaseBay, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                    <DataGridTextColumn Header="Level" Binding="{Binding BaseLevel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                    <DataGridTextColumn Header="Base" Binding="{Binding BaseValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                    <DataGridTextColumn Header="Hoist" Binding="{Binding HoistValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                    <DataGridTextColumn Header="Turn" Binding="{Binding TurnValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                    <DataGridTextColumn Header="Fork" Binding="{Binding ForkValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <DataGridTextColumn Header="Bank"  Binding="{Binding BankNumber}" IsReadOnly="True">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="ToolTip" Value="Bank 번호입니다. (읽기 전용)"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Bay" Binding="{Binding BaseBay, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="ToolTip" Value="이 Bank에서 기준이 되는 Bay 번호입니다."/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Level" Binding="{Binding BaseLevel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="ToolTip" Value="이 Bank에서 기준이 되는 Level 번호입니다."/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Base" Binding="{Binding BaseValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="ToolTip" Value="기준 위치의 Base 축 Teaching 값입니다."/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Hoist" Binding="{Binding HoistValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="ToolTip" Value="기준 위치의 Hoist 축 Teaching 값입니다."/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Turn" Binding="{Binding TurnValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="ToolTip" Value="기준 위치의 Turn 축 Teaching 값입니다."/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="Fork" Binding="{Binding ForkValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="ToolTip" Value="기준 위치의 Fork 축 Teaching 값입니다."/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
                 </DataGrid.Columns>
             </DataGrid>
         </Border>
 
         <!-- 7. Map(Grid) 영역: TabControl (남은 공간 전부) -->
-        <Border Grid.Row="6" Background="#EAF7F3" BorderBrush="#C3CCD7" BorderThickness="0,0,0,1">
-            <TabControl ItemsSource="{Binding BankCellMaps}" Margin="16,10,16,10">
+        <Border Grid.Row="6"
+                Background="#EAF7F3"
+                BorderBrush="#C3CCD7"
+                BorderThickness="0,0,0,1"
+                ToolTip="Bank별 Bank/Bay/Level Teaching 맵입니다. 각 셀을 클릭해 Dead Cell 여부를 설정할 수 있습니다.">
+            <TabControl ItemsSource="{Binding BankCellMaps}" Margin="16,10,16,10"
+                        ToolTip="각 탭은 하나의 Bank입니다. 탭을 선택해 해당 Bank의 Level/Bay 맵을 확인합니다.">
                 <TabControl.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding BankNumber, StringFormat=Bank: {0}}" FontWeight="Bold" FontSize="13" Foreground="#2264BC"/>
-                </DataTemplate>
-            </TabControl.ItemTemplate>
-            <TabControl.ContentTemplate>
-                <DataTemplate>
-                    <Border Padding="10" Background="#F4F8FB" CornerRadius="22">
-                        <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                                      VerticalScrollBarVisibility="Auto">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="*"/>
-                                </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <!-- Bay (열) Label -->
-                                <ItemsControl Grid.Row="0" Grid.Column="1" ItemsSource="{Binding BayLabels}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <UniformGrid Rows="1" Columns="{Binding DataContext.TotalBay, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding}" FontWeight="Bold" FontSize="12" HorizontalAlignment="Center"/>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                                <!-- Level (행) Label -->
-                                <ItemsControl Grid.Row="1" Grid.Column="0" ItemsSource="{Binding LevelLabels}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <UniformGrid Columns="1" Rows="{Binding DataContext.TotalLevel, RelativeSource={RelativeSource AncestorType=Window}}"/>
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding}" FontWeight="Bold" FontSize="12" VerticalAlignment="Center"/>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                                <!-- 기존 버튼 맵 -->
-                                    <ItemsControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Cells}">
+                    <DataTemplate>
+                        <TextBlock Text="{Binding BankNumber, StringFormat=Bank: {0}}"
+                                   FontWeight="Bold"
+                                   FontSize="13"
+                                   Foreground="#2264BC"
+                                   ToolTip="이 탭은 해당 Bank의 Teaching 맵을 표시합니다."/>
+                    </DataTemplate>
+                </TabControl.ItemTemplate>
+                <TabControl.ContentTemplate>
+                    <DataTemplate>
+                        <Border Padding="10"
+                                Background="#F4F8FB"
+                                CornerRadius="22"
+                                ToolTip="선택된 Bank의 Bay/Level 그리드입니다. 각 셀을 클릭해 사용/Dead Cell를 토글할 수 있습니다.">
+                            <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                          VerticalScrollBarVisibility="Auto">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <!-- Bay (열) Label -->
+                                    <ItemsControl Grid.Row="0"
+                                                  Grid.Column="1"
+                                                  ItemsSource="{Binding BayLabels}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <UniformGrid Rows="1"
+                                                             Columns="{Binding DataContext.TotalBay, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding}"
+                                                           FontWeight="Bold"
+                                                           FontSize="12"
+                                                           HorizontalAlignment="Center"
+                                                           ToolTip="Bay 번호입니다."/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <!-- Level (행) Label -->
+                                    <ItemsControl Grid.Row="1"
+                                                  Grid.Column="0"
+                                                  ItemsSource="{Binding LevelLabels}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <UniformGrid Columns="1"
+                                                             Rows="{Binding DataContext.TotalLevel, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding}"
+                                                           FontWeight="Bold"
+                                                           FontSize="12"
+                                                           VerticalAlignment="Center"
+                                                           ToolTip="Level 번호입니다."/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                    <!-- 기존 버튼 맵 -->
+                                    <ItemsControl Grid.Row="1"
+                                                  Grid.Column="1"
+                                                  ItemsSource="{Binding Cells}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
                                                 <UniformGrid x:Name="CellGrid"
-                         Rows="{Binding DataContext.TotalLevel, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                         Columns="{Binding DataContext.TotalBay, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                                             Rows="{Binding DataContext.TotalLevel, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                             Columns="{Binding DataContext.TotalBay, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
                                             </ItemsPanelTemplate>
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <Button Style="{StaticResource CellButtonStyle}"
-                    Content="{Binding DisplayText}"
-                    Command="{Binding DataContext.ToggleDeadCellCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                    CommandParameter="{Binding CellId}"
-                    ToolTip="{Binding IsDead, Converter={StaticResource DeadCellTooltipConverter}}"/>
+                                                        Content="{Binding DisplayText}"
+                                                        Command="{Binding DataContext.ToggleDeadCellCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                        CommandParameter="{Binding CellId}"
+                                                        ToolTip="{Binding IsDead, Converter={StaticResource DeadCellTooltipConverter}}"/>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
                                 </Grid>
-                        </ScrollViewer>
-                    </Border>
-                </DataTemplate>
-            </TabControl.ContentTemplate>
-        </TabControl>
+                            </ScrollViewer>
+                        </Border>
+                    </DataTemplate>
+                </TabControl.ContentTemplate>
+            </TabControl>
         </Border>
-        
+
         <!-- 8. 엑셀 저장 영역 (Grid.Row=7) -->
-        <Border Grid.Row="7" Background="#F7F7F7">
+        <Border Grid.Row="7"
+                Background="#F7F7F7"
+                ToolTip="Teaching Sheet를 저장할 경로를 지정하고, 엑셀 파일로 내보냅니다.">
             <StackPanel Orientation="Horizontal" Margin="50,15,0,10">
-                <TextBlock Text="저장 경로" VerticalAlignment="Center" FontSize="15" Margin="0,0,10,0"/>
-                <TextBox Text="{Binding SavePath}" Width="400" Margin="0,0,16,0" FontSize="15"/>
-                <Button Content="폴더 찾기" Command="{Binding BrowsePathCommand}" Margin="0,0,10,0" FontSize="12"
-                        Background="LightSteelBlue" Foreground="White" BorderThickness="0"/>
-                <Button Content="엑셀 저장" Command="{Binding GenerateAndSaveCommand}" Background="#37C2B1" Foreground="White"
-                        FontWeight="Bold" FontSize="15" Padding="20,5" Margin="0" />
+                <TextBlock Text="저장 경로"
+                           VerticalAlignment="Center"
+                           FontSize="15"
+                           Margin="0,0,10,0"
+                           ToolTip="Teaching 엑셀 파일을 저장할 폴더 경로입니다."/>
+                <TextBox Text="{Binding SavePath}"
+                         Width="400"
+                         Margin="0,0,16,0"
+                         FontSize="15"
+                         ToolTip="엑셀 파일이 저장될 폴더 경로를 입력하거나 [폴더 찾기] 버튼으로 선택합니다."/>
+                <Button Content="폴더 찾기"
+                        Command="{Binding BrowsePathCommand}"
+                        Margin="0,0,10,0"
+                        FontSize="12"
+                        Background="LightSteelBlue"
+                        Foreground="White"
+                        BorderThickness="0"
+                        ToolTip="Teaching 엑셀 저장 위치로 사용할 폴더를 탐색기에서 선택합니다."/>
+                <Button Content="엑셀 저장"
+                        Command="{Binding GenerateAndSaveCommand}"
+                        Background="#37C2B1"
+                        Foreground="White"
+                        FontWeight="Bold"
+                        FontSize="15"
+                        Padding="20,5"
+                        Margin="0"
+                        ToolTip="현재 설정된 피치/기준값/Dead Cell 맵을 기준으로 Teaching Sheet 엑셀 파일을 생성하여 저장합니다." />
             </StackPanel>
         </Border>
     </Grid>

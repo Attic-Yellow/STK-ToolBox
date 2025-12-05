@@ -13,14 +13,31 @@ using WinForms = System.Windows.Forms;
 
 namespace STK_ToolBox.ViewModels
 {
+    /// <summary>
+    /// IO Byte Sheet 생성용 ViewModel.
+    /// 
+    /// 전체 흐름 개요:
+    /// 1) IOMonitoring 테이블에서 X/Y IO 주소를 읽어 16비트(0x10) 단위로 Byte 세그먼트로 묶는다.
+    /// 2) 인버터 설정(채널/Station 수/Byte/Station/시작 주소)을 통해 X/Y 인버터 세그먼트를 추가할 수 있다.
+    /// 3) 모든 세그먼트를 채널 → Device(X/Y) → StartAddress(HEX) 순으로 정렬하여 화면에 표시한다.
+    /// 4) Export 실행 시 현재 Segments 내용을 그대로 엑셀(IO Byte Sheet)로 내보낸다.
+    /// 5) 인버터/출력 경로 등의 설정은 AppData의 텍스트 파일로 저장/불러오기 한다.
+    /// </summary>
     public class IOByteSheetViewModel : BaseViewModel
     {
         private const string SettingsFileName = "IOByteSheetSettings.txt";
 
+        /// <summary>
+        /// 화면에 표시될 IO Byte 세그먼트 목록.
+        /// - IOMonitoring에서 읽어온 세그먼트 + 인버터 세그먼트(옵션)가 합쳐진 결과.
+        /// </summary>
         public ObservableCollection<IOByteSegment> Segments { get; private set; }
 
-        #region 인버터 설정 프로퍼티
+        #region ───────── 인버터 설정 프로퍼티 ─────────
 
+        /// <summary>
+        /// 인버터가 연결된 채널 번호.
+        /// </summary>
         private int _inverterChannel = 81;
         public int InverterChannel
         {
@@ -31,11 +48,14 @@ namespace STK_ToolBox.ViewModels
                 {
                     _inverterChannel = value;
                     OnPropertyChanged();
-                    BuildSegments();   // 값 변경 즉시 반영
+                    BuildSegments();   // 값 변경 즉시 세그먼트 재구성
                 }
             }
         }
 
+        /// <summary>
+        /// 인버터가 사용하는 Station 개수.
+        /// </summary>
         private int _stationCount = 8;
         public int StationCount
         {
@@ -51,6 +71,9 @@ namespace STK_ToolBox.ViewModels
             }
         }
 
+        /// <summary>
+        /// Station 당 Byte 수.
+        /// </summary>
         private int _bytesPerStation = 2;
         public int BytesPerStation
         {
@@ -66,6 +89,9 @@ namespace STK_ToolBox.ViewModels
             }
         }
 
+        /// <summary>
+        /// 인버터 세그먼트 시작 주소(16진 문자열).
+        /// </summary>
         private string _startAddressHex = "0";
         public string StartAddressHex
         {
@@ -81,6 +107,10 @@ namespace STK_ToolBox.ViewModels
             }
         }
 
+        /// <summary>
+        /// 인버터 설정 사용 여부.
+        /// - true 이면 BuildSegments 시 인버터 세그먼트(X/Y)를 자동 추가.
+        /// </summary>
         private bool _useInverterConfig = false;
         public bool UseInverterConfig
         {
@@ -98,8 +128,12 @@ namespace STK_ToolBox.ViewModels
 
         #endregion
 
-        #region 경로 / 상태
+        #region ───────── 경로 / 상태 프로퍼티 ─────────
 
+        /// <summary>
+        /// 엑셀을 저장할 폴더 경로.
+        /// 기본값: 바탕화면.
+        /// </summary>
         private string _outputFolder =
             Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
 
@@ -116,6 +150,9 @@ namespace STK_ToolBox.ViewModels
             }
         }
 
+        /// <summary>
+        /// 엑셀 파일명(확장자 제외).
+        /// </summary>
         private string _outputFileName = "IOByteSheet";
         public string OutputFileName
         {
@@ -130,6 +167,9 @@ namespace STK_ToolBox.ViewModels
             }
         }
 
+        /// <summary>
+        /// 엑셀 Export 결과/상태 메시지.
+        /// </summary>
         private string _exportStatusMessage;
         public string ExportStatusMessage
         {
@@ -144,6 +184,9 @@ namespace STK_ToolBox.ViewModels
             }
         }
 
+        /// <summary>
+        /// IOMonitoring DB 읽기 상태 메시지.
+        /// </summary>
         private string _dbStatusMessage;
         public string DbStatusMessage
         {
@@ -158,6 +201,9 @@ namespace STK_ToolBox.ViewModels
             }
         }
 
+        /// <summary>
+        /// 설정 저장/불러오기 상태 메시지.
+        /// </summary>
         private string _settingsStatusMessage;
         public string SettingsStatusMessage
         {
@@ -174,21 +220,35 @@ namespace STK_ToolBox.ViewModels
 
         #endregion
 
-        #region Commands
+        #region ───────── Commands ─────────
 
+        /// <summary>엑셀 저장 폴더 선택</summary>
         public ICommand BrowseFolderCommand { get; private set; }
+
+        /// <summary>엑셀 Export</summary>
         public ICommand ExportCommand { get; private set; }
+
+        /// <summary>IOMonitoring 다시 읽기</summary>
         public ICommand RefreshFromDbCommand { get; private set; }
+
+        /// <summary>현재 설정 저장</summary>
         public ICommand SaveSettingsCommand { get; private set; }
+
+        /// <summary>저장된 설정 불러오기</summary>
         public ICommand LoadSettingsCommand { get; private set; }
+
+        /// <summary>도움말 표시</summary>
         public ICommand HelpCommand { get; private set; }
 
         #endregion
+
+        #region ───────── 생성자 및 초기화 ─────────
 
         public IOByteSheetViewModel()
         {
             Segments = new ObservableCollection<IOByteSegment>();
 
+            // Command 바인딩
             BrowseFolderCommand = new RelayCommand(() => BrowseFolder());
             ExportCommand = new RelayCommand(() => Export(), () => CanExport());
             RefreshFromDbCommand = new RelayCommand(() => RefreshFromDb());
@@ -196,13 +256,18 @@ namespace STK_ToolBox.ViewModels
             LoadSettingsCommand = new RelayCommand(() => LoadSettings());
             HelpCommand = new RelayCommand(() => ShowHelp());
 
-            // 초기
+            // 초기 설정 로딩 + 초기 세그먼트 구성
             LoadSettings();
             BuildSegments();
         }
 
-        #region 폴더 선택
+        #endregion
 
+        #region ───────── 폴더 선택 로직 ─────────
+
+        /// <summary>
+        /// 엑셀 저장 폴더 선택.
+        /// </summary>
         private void BrowseFolder()
         {
             using (var dialog = new WinForms.FolderBrowserDialog())
@@ -217,14 +282,21 @@ namespace STK_ToolBox.ViewModels
 
         #endregion
 
-        #region Export
+        #region ───────── 엑셀 Export 로직 ─────────
 
+        /// <summary>
+        /// Export 실행 가능 여부 조건:
+        /// - OutputFolder, OutputFileName 이 비어있지 않을 때만 허용.
+        /// </summary>
         private bool CanExport()
         {
             return !string.IsNullOrWhiteSpace(OutputFolder)
                    && !string.IsNullOrWhiteSpace(OutputFileName);
         }
 
+        /// <summary>
+        /// 현재 Segments 내용을 그대로 엑셀(IO Byte Sheet)로 내보낸다.
+        /// </summary>
         private void Export()
         {
             try
@@ -249,8 +321,11 @@ namespace STK_ToolBox.ViewModels
 
         #endregion
 
-        #region 도움말
+        #region ───────── 도움말 안내 ─────────
 
+        /// <summary>
+        /// IO Byte Sheet 사용 방법 및 제약사항 안내 메시지 표시.
+        /// </summary>
         private void ShowHelp()
         {
             var sb = new StringBuilder();
@@ -285,8 +360,11 @@ namespace STK_ToolBox.ViewModels
 
         #endregion
 
-        #region Hex 파싱 + 정렬 도우미
+        #region ───────── Hex 파싱 + 정렬 도우미 ─────────
 
+        /// <summary>
+        /// 16진 문자열을 int로 파싱. 실패 시 0 반환.
+        /// </summary>
         private static int ParseHex(string hex)
         {
             if (string.IsNullOrWhiteSpace(hex))
@@ -304,7 +382,7 @@ namespace STK_ToolBox.ViewModels
         }
 
         /// <summary>
-        /// IO 순번(채널 → Device(X/Y) → StartAddress(HEX)) 기준 정렬용 비교 함수
+        /// IO 순번(채널 → Device(X/Y) → StartAddress(HEX)) 기준 정렬용 비교 함수.
         /// </summary>
         private static int CompareSegments(IOByteSegment a, IOByteSegment b)
         {
@@ -330,8 +408,15 @@ namespace STK_ToolBox.ViewModels
 
         #endregion
 
-        #region Segments 구성 (IOMonitoring + Inverter)
+        #region ───────── Segments 구성 (IOMonitoring + Inverter) ─────────
 
+        /// <summary>
+        /// 전체 세그먼트 재구성:
+        /// 1) IOMonitoring 기반 세그먼트 로딩
+        /// 2) 인버터 설정 활성화 시 인버터 세그먼트(X/Y 모두) 추가
+        /// 3) 채널 → Device → StartAddr 기준 정렬
+        /// 4) ObservableCollection(Segments) 갱신
+        /// </summary>
         private void BuildSegments()
         {
             // 1) DB 기반 세그먼트
@@ -358,7 +443,10 @@ namespace STK_ToolBox.ViewModels
         }
 
         /// <summary>
-        /// 인버터 설정값으로부터 X/Y 구간 모두 생성.
+        /// 인버터 설정값으로부터 X/Y 인버터 세그먼트를 모두 생성.
+        /// - Station 수 만큼 반복
+        /// - 시작 주소에서 Station 번호마다 0x20씩 증가
+        /// - 각 Station에 대해 X/Y 둘 다 동일한 주소로 Byte 세그먼트 생성
         /// </summary>
         private ObservableCollection<IOByteSegment> BuildInverterSegments()
         {
@@ -408,8 +496,11 @@ namespace STK_ToolBox.ViewModels
 
         #endregion
 
-        #region IOMonitoring 읽기 + Byte 묶기
+        #region ───────── IOMonitoring 읽기 + Byte 묶기 ─────────
 
+        /// <summary>
+        /// IOMonitoring 테이블을 다시 읽어서 세그먼트를 재구성.
+        /// </summary>
         private void RefreshFromDb()
         {
             try
@@ -424,6 +515,16 @@ namespace STK_ToolBox.ViewModels
             }
         }
 
+        /// <summary>
+        /// IOMonitoring 테이블에서 X/Y IO 주소들을 읽어
+        /// 채널+Device+16비트(0x10) 시작 주소 단위로 Byte 세그먼트를 생성.
+        /// 
+        /// 알고리즘:
+        /// - Address: X01A0 → Device='X', hexPart='01A0'
+        /// - offset = hexPart(hex) → baseAddr = offset & ~0xF (16 단위로 내림)
+        /// - key = "Channel|Device|baseHex" 로 묶고, bit 개수 카운트
+        /// - 최종 byteSize = (bitCount + 7) / 8 으로 계산하여 IOByteSegment 생성
+        /// </summary>
         private ObservableCollection<IOByteSegment> LoadSegmentsFromIOMonitoring()
         {
             var result = new ObservableCollection<IOByteSegment>();
@@ -439,7 +540,8 @@ namespace STK_ToolBox.ViewModels
 
                 string connStr = "Data Source=" + dbPath + ";Version=3;";
 
-                var counter = new Dictionary<string, int>(); // key: "Channel|Device|BaseHex"
+                // key: "Channel|Device|BaseHex", value: 해당 16bit 블록에 존재하는 bit 개수
+                var counter = new Dictionary<string, int>();
 
                 using (var conn = new SQLiteConnection(connStr))
                 using (var cmd = conn.CreateCommand())
@@ -462,25 +564,26 @@ namespace STK_ToolBox.ViewModels
                                 string.IsNullOrWhiteSpace(chStr))
                                 continue;
 
-                            addrRaw = addrRaw.Trim().ToUpper();   // X01A0
+                            addrRaw = addrRaw.Trim().ToUpper();   // 예: X01A0
                             chStr = chStr.Trim();
 
-                            char dev = addrRaw[0];
+                            char dev = addrRaw[0];               // 'X' or 'Y'
                             if (dev != 'X' && dev != 'Y')
                                 continue;
 
-                            string hexPart = addrRaw.Substring(1); // 01A0
+                            string hexPart = addrRaw.Substring(1); // "01A0"
 
                             int offset;
-                            if (!int.TryParse(hexPart, System.Globalization.NumberStyles.HexNumber,
-                                System.Globalization.CultureInfo.InvariantCulture, out offset))
+                            if (!int.TryParse(hexPart, NumberStyles.HexNumber,
+                                CultureInfo.InvariantCulture, out offset))
                                 continue;
 
                             int channel;
                             if (!int.TryParse(chStr, out channel))
                                 continue;
 
-                            int baseAddr = offset & ~0xF;     // 16비트(0x10) 단위
+                            // 16bit (0x10) 단위 블록 시작 주소
+                            int baseAddr = offset & ~0xF;
                             string baseHex = baseAddr.ToString("X");
 
                             string key = channel + "|" + dev + "|" + baseHex;
@@ -492,6 +595,7 @@ namespace STK_ToolBox.ViewModels
                     }
                 }
 
+                // 카운트 결과를 IOByteSegment로 변환
                 foreach (var kvp in counter)
                 {
                     string[] parts = kvp.Key.Split('|');
@@ -505,6 +609,7 @@ namespace STK_ToolBox.ViewModels
                     string baseHex = parts[2];
                     int bitCount = kvp.Value;
 
+                    // bit 개수를 Byte 수로 변환 (ceil(bitCount / 8))
                     int byteSize = (bitCount + 7) / 8;
 
                     result.Add(new IOByteSegment
@@ -531,8 +636,11 @@ namespace STK_ToolBox.ViewModels
 
         #endregion
 
-        #region 설정 저장/불러오기
+        #region ───────── 설정 저장/불러오기 ─────────
 
+        /// <summary>
+        /// 현재 인버터/경로/파일명 설정을 AppData 경로에 텍스트 파일로 저장.
+        /// </summary>
         private void SaveSettings()
         {
             try
@@ -562,6 +670,9 @@ namespace STK_ToolBox.ViewModels
             }
         }
 
+        /// <summary>
+        /// 저장된 설정 파일을 읽어서 인버터/경로/파일명을 복원.
+        /// </summary>
         private void LoadSettings()
         {
             try
@@ -617,6 +728,7 @@ namespace STK_ToolBox.ViewModels
                     }
                 }
 
+                // 내부 필드를 직접 세팅했으므로 UI 갱신을 위해 PropertyChanged 발생
                 OnPropertyChanged(nameof(InverterChannel));
                 OnPropertyChanged(nameof(StationCount));
                 OnPropertyChanged(nameof(BytesPerStation));

@@ -9,6 +9,8 @@
 
         <!-- TabControl 스타일 재정의 -->
         <Style TargetType="Controls:MetroTabControl" BasedOn="{StaticResource {x:Type Controls:MetroTabControl}}">
+            <Setter Property="ToolTip"
+                    Value="Teaching 관련 기능(티칭 시트, 토크 시트, Tact, IO 체크)을 탭으로 전환할 수 있습니다."/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TabControl">
@@ -20,20 +22,22 @@
 
                             <!-- 균등 배치 TabPanel -->
                             <UniformGrid Grid.Row="0" 
-                             IsItemsHost="True"
-                             Rows="1"
-                             HorizontalAlignment="Stretch"/>
+                                         IsItemsHost="True"
+                                         Rows="1"
+                                         HorizontalAlignment="Stretch"
+                                         ToolTip="각 탭을 클릭하여 원하는 Teaching 도구로 이동합니다." />
 
                             <ContentPresenter Grid.Row="1"
-                                  ContentSource="SelectedContent"
-                                  SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
-                                  Margin="{TemplateBinding Padding}"/>
+                                              ContentSource="SelectedContent"
+                                              SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
+                                              Margin="{TemplateBinding Padding}"
+                                              ToolTip="선택된 탭의 상세 화면입니다."/>
                         </Grid>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
-        
+
         <!-- 탭 스타일 커스터마이즈 -->
         <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
             <Setter Property="MinWidth" Value="120"/>
@@ -44,22 +48,24 @@
             <Setter Property="Background" Value="#E3F2FD"/>
             <Setter Property="Foreground" Value="#1565C0"/>
             <Setter Property="FontWeight" Value="Bold"/>
+            <!-- 헤더 텍스트를 그대로 툴팁으로 사용 -->
+            <Setter Property="ToolTip" Value="{Binding Header, RelativeSource={RelativeSource Self}}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TabItem">
                         <Border x:Name="Bd"
-                 Background="{TemplateBinding Background}"
-                 CornerRadius="6"
-                 BorderBrush="#90CAF9"
-                 BorderThickness="1"
-                 Padding="{TemplateBinding Padding}"
-                 SnapsToDevicePixels="True"
-                 Margin="2,0"
-                 MinHeight="{TemplateBinding MinHeight}">
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="6"
+                                BorderBrush="#90CAF9"
+                                BorderThickness="1"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True"
+                                Margin="2,0"
+                                MinHeight="{TemplateBinding MinHeight}">
                             <ContentPresenter x:Name="Content"
-                               ContentSource="Header"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center"/>
+                                              ContentSource="Header"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <!-- 선택된 탭 -->
@@ -77,11 +83,13 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        
+
     </UserControl.Resources>
-    
-    <Grid Background="#F4F6F9">
-        <avalonDock:DockingManager x:Name="DockManager">
+
+    <Grid Background="#F4F6F9"
+          ToolTip="Teaching Sheet 생성, 토크 분석, Tact 분석, IO 체크를 통합 제공하는 Teaching 페이지입니다.">
+        <avalonDock:DockingManager x:Name="DockManager"
+                                   ToolTip="Teaching 전용 레이아웃 영역입니다. AvalonDock를 통해 도킹/레이아웃을 관리합니다.">
             <avalonDock:LayoutRoot>
                 <avalonDock:LayoutPanel Orientation="Horizontal">
                     <avalonDock:LayoutPanel Orientation="Vertical" DockWidth="*">
@@ -89,23 +97,36 @@
                             <avalonDock:LayoutAnchorable Title="Teaching"
                                                          ContentId="TeachingView"
                                                          CanHide="False"
-                                                         CanClose="False">
+                                                         CanClose="False"
+                                                         ToolTip="Teaching 관련 도구들을 포함한 메인 패널입니다.">
 
                                 <!-- Teaching 탭 컨트롤 -->
                                 <Controls:MetroTabControl x:Name="TeachingTabControl"
                                                           Margin="10"
                                                           FontSize="16"
-                                                          TabStripPlacement="Top">
+                                                          TabStripPlacement="Top"
+                                                          ToolTip="티칭 시트, 토크 시트, Tact, IO 체크 탭을 선택할 수 있습니다.">
+
                                     <!-- Teaching Sheet -->
-                                    <TabItem Header="티칭 시트">
-                                        <Border Background="White" CornerRadius="10" Padding="15" Margin="5">
+                                    <TabItem Header="티칭 시트"
+                                             ToolTip="STK Teaching Sheet를 자동 생성하는 도구입니다. Bank/Bay/Level 맵과 Dead Cell을 설정하고 엑셀로 내보냅니다.">
+                                        <Border Background="White"
+                                                CornerRadius="10"
+                                                Padding="15"
+                                                Margin="5"
+                                                ToolTip="Teaching Sheet Generator 화면입니다. 피치/Bank/Bay/Level, Dead Cell 맵을 설정 후 엑셀로 저장합니다.">
                                             <ConLayOut:TeachingSheetGeneratorControl />
                                         </Border>
                                     </TabItem>
 
                                     <!-- Torque Sheet -->
-                                    <TabItem Header="토크 시트">
-                                        <Border Background="White" CornerRadius="10" Padding="15" Margin="5">
+                                    <TabItem Header="토크 시트"
+                                             ToolTip="토크 로그를 분석하여 Torque Sheet를 생성/검토하는 도구입니다.">
+                                        <Border Background="White"
+                                                CornerRadius="10"
+                                                Padding="15"
+                                                Margin="5"
+                                                ToolTip="Torque Analyzer 화면입니다. 토크 로그를 불러와 분석하고, 시트 형태로 정리합니다.">
                                             <ConLayOut:TorqueAnalyzerControl />
                                             <!--  <TextBlock Text="추후 업데이트 예정"
                                                        VerticalAlignment="Center"
@@ -114,17 +135,27 @@
                                                        Foreground="Gray"/> -->
                                         </Border>
                                     </TabItem>
-                                    
+
                                     <!-- Tact -->
-                                    <TabItem Header="Tact">
-                                        <Border Background="White" CornerRadius="10" Padding="15" Margin="5">
+                                    <TabItem Header="Tact"
+                                             ToolTip="Tact 로그를 분석하여 공정별 Tact Time을 계산/비교하는 도구입니다.">
+                                        <Border Background="White"
+                                                CornerRadius="10"
+                                                Padding="15"
+                                                Margin="5"
+                                                ToolTip="Tact Analyzer 화면입니다. Tact 로그 파일을 분석하여 공정 시간과 구간별 통계를 확인합니다.">
                                             <ConLayOut:TactAnalyzerControl />
                                         </Border>
                                     </TabItem>
-                                    
+
                                     <!-- IO Check -->
-                                    <TabItem Header="IO 체크">
-                                        <Border Background="White" CornerRadius="10" Padding="15" Margin="5">
+                                    <TabItem Header="IO 체크"
+                                             ToolTip="Stocker 장비의 IO 상태를 모니터링하고 출력 토글·메모·체크를 관리하는 IO 체크 도구입니다.">
+                                        <Border Background="White"
+                                                CornerRadius="10"
+                                                Padding="15"
+                                                Margin="5"
+                                                ToolTip="IOCheck 화면입니다. CC-Link IO 모니터링 및 출력 토글, 메모, 체크 기능을 제공합니다.">
                                             <ConLayOut:IOCheckControl />
                                             <!-- <TextBlock Text="추후 업데이트 예정"
                                                        VerticalAlignment="Center"

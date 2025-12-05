@@ -8,6 +8,8 @@
 
         <!-- TabControl 스타일 재정의 -->
         <Style TargetType="Controls:MetroTabControl" BasedOn="{StaticResource {x:Type Controls:MetroTabControl}}">
+            <Setter Property="ToolTip"
+                    Value="DB 관련 도구(예: IO Byte 시트 생성)를 탭으로 전환하여 사용할 수 있습니다."/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TabControl">
@@ -19,14 +21,16 @@
 
                             <!-- 균등 배치 TabPanel -->
                             <UniformGrid Grid.Row="0" 
-                          IsItemsHost="True"
-                          Rows="1"
-                          HorizontalAlignment="Stretch"/>
+                                         IsItemsHost="True"
+                                         Rows="1"
+                                         HorizontalAlignment="Stretch"
+                                         ToolTip="각 탭을 클릭하여 해당 DB 기능 화면으로 이동합니다." />
 
                             <ContentPresenter Grid.Row="1"
-                               ContentSource="SelectedContent"
-                               SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
-                               Margin="{TemplateBinding Padding}"/>
+                                              ContentSource="SelectedContent"
+                                              SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
+                                              Margin="{TemplateBinding Padding}"
+                                              ToolTip="선택된 탭의 상세 DB 화면입니다."/>
                         </Grid>
                     </ControlTemplate>
                 </Setter.Value>
@@ -43,22 +47,24 @@
             <Setter Property="Background" Value="#E3F2FD"/>
             <Setter Property="Foreground" Value="#1565C0"/>
             <Setter Property="FontWeight" Value="Bold"/>
+            <!-- 헤더 텍스트를 그대로 툴팁으로 사용 -->
+            <Setter Property="ToolTip" Value="{Binding Header, RelativeSource={RelativeSource Self}}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TabItem">
                         <Border x:Name="Bd"
-              Background="{TemplateBinding Background}"
-              CornerRadius="6"
-              BorderBrush="#90CAF9"
-              BorderThickness="1"
-              Padding="{TemplateBinding Padding}"
-              SnapsToDevicePixels="True"
-              Margin="2,0"
-              MinHeight="{TemplateBinding MinHeight}">
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="6"
+                                BorderBrush="#90CAF9"
+                                BorderThickness="1"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True"
+                                Margin="2,0"
+                                MinHeight="{TemplateBinding MinHeight}">
                             <ContentPresenter x:Name="Content"
-                            ContentSource="Header"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"/>
+                                              ContentSource="Header"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <!-- 선택된 탭 -->
@@ -79,25 +85,35 @@
 
     </UserControl.Resources>
 
-    <Grid Background="#F4F6F9">
-        <avalonDock:DockingManager x:Name="DockManager">
+    <Grid Background="#F4F6F9"
+          ToolTip="DB 관련 기능(IO Byte 시트 생성 등)을 모아 둔 페이지입니다. 추후 다른 DB 유틸리티도 이곳에 추가할 수 있습니다.">
+        <avalonDock:DockingManager x:Name="DockManager"
+                                   ToolTip="DB 전용 레이아웃 영역입니다. AvalonDock를 통해 도킹/레이아웃을 관리합니다.">
             <avalonDock:LayoutRoot>
                 <avalonDock:LayoutPanel Orientation="Horizontal">
                     <avalonDock:LayoutPanel Orientation="Vertical" DockWidth="*">
                         <avalonDock:LayoutAnchorablePane DockHeight="*">
                             <avalonDock:LayoutAnchorable Title="DB"
-                                                      ContentId="DBView"
-                                                      CanHide="False"
-                                                      CanClose="False">
+                                                         ContentId="DBView"
+                                                         CanHide="False"
+                                                         CanClose="False"
+                                                         ToolTip="DB 관련 도구들을 포함한 메인 패널입니다.">
 
                                 <!-- DB 탭 컨트롤 -->
                                 <Controls:MetroTabControl x:Name="DBTabControl"
-                                                       Margin="10"
-                                                       FontSize="16"
-                                                       TabStripPlacement="Top">
+                                                          Margin="10"
+                                                          FontSize="16"
+                                                          TabStripPlacement="Top"
+                                                          ToolTip="IO Byte 생성 및 기타 DB 유틸리티를 탭으로 전환하여 사용할 수 있습니다.">
+
                                     <!-- IOByte -->
-                                    <TabItem Header="IO Byte 생성">
-                                        <Border Background="White" CornerRadius="10" Padding="15" Margin="5">
+                                    <TabItem Header="IO Byte 생성"
+                                             ToolTip="IOMonitoring 테이블을 기반으로 IO Byte 시트를 자동 생성하는 도구입니다.">
+                                        <Border Background="White"
+                                                CornerRadius="10"
+                                                Padding="15"
+                                                Margin="5"
+                                                ToolTip="IOByteSheet 화면입니다. IO 모니터링 정보를 바탕으로 IO Byte Excel 시트를 생성합니다.">
                                             <ConLayOut:IOByteSheetControl />
                                             <!-- <TextBlock Text="업데이트 진행 중"
                                                     VerticalAlignment="Center"
@@ -108,24 +124,36 @@
                                     </TabItem>
 
                                     <!-- 뭐 넣지 -->
-                                    <TabItem Header="추천 좀">
-                                        <Border Background="White" CornerRadius="10" Padding="15" Margin="5">
+                                    <TabItem Header="추천 좀"
+                                             ToolTip="추가할 DB 관련 기능에 대한 아이디어를 모으는 자리입니다.">
+                                        <Border Background="White"
+                                                CornerRadius="10"
+                                                Padding="15"
+                                                Margin="5"
+                                                ToolTip="아직 기능이 정해지지 않은 탭입니다. 나중에 DB 관련 유틸리티를 추가할 수 있습니다.">
                                             <TextBlock Text="무슨 기능 넣어야 할지 모르겠어요"
-                                                    VerticalAlignment="Center"
-                                                    HorizontalAlignment="Center"
-                                                    FontSize="18"
-                                                    Foreground="Gray"/>
+                                                       VerticalAlignment="Center"
+                                                       HorizontalAlignment="Center"
+                                                       FontSize="18"
+                                                       Foreground="Gray"
+                                                       ToolTip="DB와 관련된 자동화/조회/정리 기능 등을 이 탭에 넣을 수 있습니다."/>
                                         </Border>
                                     </TabItem>
 
                                     <!-- 뭐 넣지2 -->
-                                    <TabItem Header="추천 좀2">
-                                        <Border Background="White" CornerRadius="10" Padding="15" Margin="5">
+                                    <TabItem Header="추천 좀2"
+                                             ToolTip="또 다른 DB 관련 기능을 확장하기 위한 자리입니다.">
+                                        <Border Background="White"
+                                                CornerRadius="10"
+                                                Padding="15"
+                                                Margin="5"
+                                                ToolTip="두 번째 예비 탭입니다. 향후 필요해지는 DB 기능을 이 영역에 구현할 수 있습니다.">
                                             <TextBlock Text="이제 진짜 뭐 추가하지"
-                                                    VerticalAlignment="Center"
-                                                    HorizontalAlignment="Center"
-                                                    FontSize="18"
-                                                    Foreground="Gray"/> 
+                                                       VerticalAlignment="Center"
+                                                       HorizontalAlignment="Center"
+                                                       FontSize="18"
+                                                       Foreground="Gray"
+                                                       ToolTip="예: Log Viewer, DB 백업/복원, 간단한 쿼리 실행 도구 등을 고려해 볼 수 있습니다."/>
                                         </Border>
                                     </TabItem>
                                 </Controls:MetroTabControl>

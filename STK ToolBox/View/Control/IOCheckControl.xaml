@@ -32,6 +32,7 @@
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+            <Setter Property="ToolTip" Value="CC-Link IO 주소입니다."/>
         </Style>
 
         <Style x:Key="ToggleBtnStyle" TargetType="Button">
@@ -39,6 +40,8 @@
             <Setter Property="MinWidth" Value="86"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Focusable" Value="False"/>
+            <Setter Property="ToolTip"
+                    Value="해당 IO(Y)의 출력을 ON/OFF 토글합니다. (CC-Link 보드와 통신 중일 때만 동작)"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding CurrentState}" Value="True">
                     <Setter Property="Content" Value="Turn OFF"/>
@@ -49,6 +52,8 @@
                 <DataTrigger Binding="{Binding CanToggle}" Value="False">
                     <Setter Property="IsEnabled" Value="False"/>
                     <Setter Property="Opacity" Value="0.45"/>
+                    <Setter Property="ToolTip"
+                            Value="출력을 토글할 수 없는 IO입니다. (입력 X 이거나 Spare 등)"/>
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -59,6 +64,8 @@
             <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
             <Setter Property="MinHeight" Value="30"/>
             <Setter Property="FontSize" Value="14"/>
+            <Setter Property="ToolTip"
+                    Value="한 행은 하나의 IO 포인트입니다. 더블 클릭 시 자세한 정보를 표시하도록 구현할 수 있습니다."/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsChecked}" Value="True">
                     <Setter Property="Background" Value="{StaticResource CheckedRowBrush}"/>
@@ -89,6 +96,7 @@
 
         <Style x:Key="CellStyleNameCol" TargetType="DataGridCell" BasedOn="{StaticResource CellStyle}">
             <Setter Property="Background" Value="{StaticResource ColBgName}"/>
+            <Setter Property="ToolTip" Value="IO 이름입니다. 텍스트가 길면 말줄임으로 표시됩니다."/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsChecked}" Value="True">
                     <Setter Property="Background" Value="{StaticResource CheckedRowBrush}"/>
@@ -101,6 +109,7 @@
 
         <Style x:Key="CellStyleOutputCol" TargetType="DataGridCell" BasedOn="{StaticResource CellStyle}">
             <Setter Property="Background" Value="{StaticResource ColBgOutput}"/>
+            <Setter Property="ToolTip" Value="출력 토글 버튼 영역입니다."/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsChecked}" Value="True">
                     <Setter Property="Background" Value="{StaticResource CheckedRowBrush}"/>
@@ -130,7 +139,8 @@
                       AlternationCount="2"
                       AlternatingRowBackground="#FBFCFE"
                       SelectionMode="Single"
-                      SelectionUnit="FullRow">
+                      SelectionUnit="FullRow"
+                      ToolTip="한쪽에 16개의 IO를 표시합니다. (좌/우 합계 32개)">
                 <DataGrid.Resources>
                     <Style TargetType="DataGridCell" BasedOn="{StaticResource CellStyle}">
                         <Setter Property="BorderThickness" Value="0,0,0,1"/>
@@ -141,7 +151,10 @@
                     <!-- ADDR: 고정 폭(약간 늘림) -->
                     <DataGridTextColumn Header="ADDR" Binding="{Binding Address}" Width="90">
                         <DataGridTextColumn.ElementStyle>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource AddrText}"/>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource AddrText}">
+                                <Setter Property="ToolTip"
+                                        Value="CC-Link IO 주소입니다. (국번/스테이션/비트 등)"/>
+                            </Style>
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
 
@@ -160,7 +173,17 @@
 
                     <!-- STAT: 작게 -->
                     <DataGridCheckBoxColumn Header="STAT" Binding="{Binding CurrentState}"
-                                            IsReadOnly="True" Width="70"/>
+                                            IsReadOnly="True" Width="70">
+                        <DataGridCheckBoxColumn.ElementStyle>
+                            <Style TargetType="CheckBox">
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="IsHitTestVisible" Value="False"/>
+                                <Setter Property="ToolTip"
+                                        Value="현재 IO의 입력 상태입니다. (읽기 전용)"/>
+                            </Style>
+                        </DataGridCheckBoxColumn.ElementStyle>
+                    </DataGridCheckBoxColumn>
 
                     <!-- OUTPUT: 버튼 작게 + VM 커맨드로 바인딩 수정 -->
                     <DataGridTemplateColumn Header="OUTPUT" Width="85">
@@ -173,7 +196,8 @@
                                         MinWidth="64"
                                         FontSize="12"
                                         Command="{Binding DataContext.ToggleOutputCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}">
+                                        CommandParameter="{Binding}"
+                                        ToolTip="해당 IO(Y)의 출력을 ON/OFF 토글합니다.">
                                     <Button.Style>
                                         <Style TargetType="Button" BasedOn="{StaticResource ToggleBtnStyle}">
                                             <Setter Property="Padding" Value="6,2"/>
@@ -193,7 +217,8 @@
                                 <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                           Focusable="False"
                                           HorizontalAlignment="Center"
-                                          VerticalAlignment="Center"/>
+                                          VerticalAlignment="Center"
+                                          ToolTip="이 IO를 체크 대상으로 표시합니다. 저장/불러오기 시 상태가 유지됩니다."/>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
@@ -210,7 +235,7 @@
                                     <Button.Style>
                                         <Style TargetType="Button">
                                             <Setter Property="Content" Value="메모"/>
-                                            <Setter Property="ToolTip" Value="메모 없음"/>
+                                            <Setter Property="ToolTip" Value="메모를 작성하거나 수정합니다."/>
                                             <Setter Property="Background" Value="{x:Null}"/>
                                             <Setter Property="Foreground"
                                                     Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
@@ -219,7 +244,7 @@
                                                 <DataTrigger Binding="{Binding HasNote}" Value="True">
                                                     <Setter Property="Background" Value="#FFFDE9C9"/>
                                                     <Setter Property="Foreground" Value="#B45309"/>
-                                                    <Setter Property="ToolTip" Value="메모가 있습니다."/>
+                                                    <Setter Property="ToolTip" Value="메모가 있습니다. 클릭하여 확인/수정합니다."/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -237,6 +262,7 @@
             <Setter Property="Width" Value="180"/>
             <Setter Property="Height" Value="34"/>
             <Setter Property="Padding" Value="8,2"/>
+            <Setter Property="ToolTip" Value="{Binding Header}"/>
         </Style>
 
         <DataTemplate x:Key="LeftTabHeaderTemplate">
@@ -245,6 +271,7 @@
 
         <!-- 스크롤 가능한 왼쪽 탭 템플릿 -->
         <Style x:Key="ScrollableLeftTabControl" TargetType="TabControl">
+            <Setter Property="ToolTip" Value="각 DetailUnit 별 IO 그룹을 탭으로 선택할 수 있습니다."/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type TabControl}">
@@ -294,36 +321,33 @@
         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
             <Button Content="저장하기"
                     Command="{Binding SaveCommand}"
-                    Margin="0,0,8,0"/>
-
+                    Margin="0,0,8,0"
+                    ToolTip="현재 IO 체크 상태와 메모 내용을 상태 파일로 저장합니다."/>
             <Button Content="불러오기"
                     Command="{Binding LoadStateCommand}"
-                    Margin="0,0,8,0"/>
-
+                    Margin="0,0,8,0"
+                    ToolTip="이전에 저장한 IO 체크 상태와 메모 내용을 불러옵니다."/>
             <Button Content="도움말"
                     Command="{Binding HelpCommand}"
-                    Margin="0,0,16,0"/>
-
+                    Margin="0,0,16,0"
+                    ToolTip="IO 모니터 사용 방법, 전제 조건, 제약 사항을 표시합니다.&#x0a;- 전제: IOMonitoring 테이블이 완성된 상태에서 사용&#x0a;- 제약: 인버터 스테이션을 중간에 임의로 뺄 수 없습니다."/>
             <!-- 추가: Check 관련 4개 버튼 (Spare 제외) -->
             <Button Content="Check 전체 선택"
                     Command="{Binding CheckAllCommand}"
                     Margin="0,0,8,0"
-                    ToolTip="전체 IO 중 Spare를 제외하고 체크합니다."/>
-
+                    ToolTip="전체 IO 중 Spare를 제외하고 모두 체크합니다."/>
             <Button Content="Check 전체 해제"
                     Command="{Binding UncheckAllCommand}"
                     Margin="0,0,16,0"
-                    ToolTip="전체 IO 중 Spare를 제외하고 체크를 해제합니다."/>
-
+                    ToolTip="전체 IO 중 Spare를 제외하고 체크를 모두 해제합니다."/>
             <Button Content="현재 탭 Check 전체 선택"
                     Command="{Binding CheckCurrentTabCommand}"
                     Margin="0,0,8,0"
-                    ToolTip="현재 탭의 IO 중 Spare를 제외하고 체크합니다."/>
-
+                    ToolTip="현재 선택된 탭 내 IO 중 Spare를 제외하고 모두 체크합니다."/>
             <Button Content="현재 탭 Check 전체 해제"
                     Command="{Binding UncheckCurrentTabCommand}"
                     Margin="0,0,0,0"
-                    ToolTip="현재 탭의 IO 중 Spare를 제외하고 체크를 해제합니다."/>
+                    ToolTip="현재 선택된 탭 내 IO 중 Spare를 제외하고 체크를 모두 해제합니다."/>
         </StackPanel>
 
         <!-- 탭 (좌:헤더/우:내용) -->
@@ -345,12 +369,14 @@
 
                         <!-- 좌 16 -->
                         <ContentControl Content="{Binding Left16}"
-                                        ContentTemplate="{StaticResource SixteenGridSideTemplate16}"/>
+                                        ContentTemplate="{StaticResource SixteenGridSideTemplate16}"
+                                        ToolTip="현재 DetailUnit의 좌측 16개 IO 리스트입니다."/>
                         <Grid Grid.Column="1"/>
                         <!-- 우 16 -->
                         <ContentControl Grid.Column="2"
                                         Content="{Binding Right16}"
-                                        ContentTemplate="{StaticResource SixteenGridSideTemplate16}"/>
+                                        ContentTemplate="{StaticResource SixteenGridSideTemplate16}"
+                                        ToolTip="현재 DetailUnit의 우측 16개 IO 리스트입니다."/>
                     </Grid>
                 </DataTemplate>
             </TabControl.ContentTemplate>
@@ -362,8 +388,12 @@
                        Text="{Binding HwStatusText}"
                        Foreground="{Binding HwStatusBrush}"
                        FontWeight="SemiBold"
-                       Margin="0,0,12,0"/>
-            <TextBlock Text="{Binding StateFilePath}" Foreground="#6B7280" FontSize="11"/>
+                       Margin="0,0,12,0"
+                       ToolTip="CC-Link 보드와의 통신 상태를 표시합니다."/>
+            <TextBlock Text="{Binding StateFilePath}"
+                       Foreground="#6B7280"
+                       FontSize="11"
+                       ToolTip="현재 사용 중인 상태 파일 경로입니다. (저장/불러오기 대상)"/>
         </DockPanel>
     </Grid>
 </UserControl>

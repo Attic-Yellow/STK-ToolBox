@@ -35,6 +35,7 @@
             <Setter Property="BorderBrush" Value="#D1D5DB"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="ToolTip" Value="카메라 제어용 공통 버튼입니다."/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -61,6 +62,7 @@
             <Setter Property="Background" Value="{StaticResource Primary}"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderBrush" Value="{StaticResource PrimaryDark}"/>
+            <Setter Property="ToolTip" Value="네트워크 카메라 검색 등 주요 작업에 사용하는 버튼입니다."/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -96,9 +98,11 @@
         <Style TargetType="TextBox">
             <Setter Property="Height" Value="30"/>
             <Setter Property="Margin" Value="0,0,10,0"/>
+            <Setter Property="ToolTip" Value="카메라 접속에 필요한 값을 입력합니다."/>
         </Style>
         <Style TargetType="PasswordBox">
             <Setter Property="Height" Value="30"/>
+            <Setter Property="ToolTip" Value="카메라 로그인 비밀번호를 입력합니다."/>
         </Style>
 
         <!-- 리스트 항목 컨테이너 -->
@@ -106,6 +110,7 @@
             <Setter Property="Padding" Value="6"/>
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
             <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="ToolTip" Value="이 카메라 항목을 클릭하여 선택하거나 더블클릭으로 열 수 있습니다."/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ListBoxItem">
@@ -153,11 +158,14 @@
         <!-- 헤더 -->
         <DockPanel Grid.Row="0" Margin="16,16,16,8">
             <TextBlock Text="Connected Cameras (192.168.10.200–255)"
-                       FontSize="18" FontWeight="SemiBold" />
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       ToolTip="현재 검색 대상인 IP 대역(192.168.10.200~255)에서 연결 가능한 카메라 목록을 표시합니다." />
             <TextBlock DockPanel.Dock="Right"
                        Foreground="{StaticResource TextMuted}"
                        VerticalAlignment="Center"
-                       Text="{Binding ElementName=LbCameras, Path=Items.Count, StringFormat=표시 수: {0}}" />
+                       Text="{Binding ElementName=LbCameras, Path=Items.Count, StringFormat=표시 수: {0}}"
+                       ToolTip="현재 목록에 표시 중인 카메라 개수입니다." />
         </DockPanel>
 
         <!-- 로그인 + 컨트롤 -->
@@ -177,30 +185,58 @@
                 </Grid.RowDefinitions>
 
                 <!-- 로그인 -->
-                <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="Username" Margin="0,0,8,0" Foreground="{StaticResource TextMuted}"/>
-                    <TextBox Width="180" Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"/>
-                    <TextBlock Text="Password" Margin="14,0,8,0" Foreground="{StaticResource TextMuted}"/>
-                    <PasswordBox x:Name="PwdBox" Width="180" PasswordChanged="PwdBox_PasswordChanged"/>
+                <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"
+                            ToolTip="카메라 Web UI 접속에 사용할 계정 정보를 입력하는 영역입니다.">
+                    <TextBlock Text="Username"
+                               Margin="0,0,8,0"
+                               Foreground="{StaticResource TextMuted}"
+                               ToolTip="카메라에 로그인할 사용자 이름입니다."/>
+                    <TextBox Width="180"
+                             Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="카메라 로그인에 사용할 사용자 이름을 입력합니다."/>
+                    <TextBlock Text="Password"
+                               Margin="14,0,8,0"
+                               Foreground="{StaticResource TextMuted}"
+                               ToolTip="카메라에 로그인할 비밀번호입니다."/>
+                    <PasswordBox x:Name="PwdBox"
+                                 Width="180"
+                                 PasswordChanged="PwdBox_PasswordChanged"
+                                 ToolTip="카메라 로그인 비밀번호를 입력합니다. 실제 값은 ViewModel로 전달됩니다."/>
                 </StackPanel>
 
                 <!-- 버튼 -->
-                <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal">
-                    <Button Style="{StaticResource PrimaryButton}" Content="SCAN" Command="{Binding ScanCommand}"/>
-                    <Button Style="{StaticResource BaseButton}" Content="취소" Command="{Binding CancelScanCommand}"/>
+                <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal"
+                            ToolTip="카메라 검색, 선택, 브라우저 열기 등의 작업을 수행합니다.">
+                    <Button Style="{StaticResource PrimaryButton}"
+                            Content="SCAN"
+                            Command="{Binding ScanCommand}"
+                            ToolTip="192.168.10.200~255 대역에서 온라인 상태의 카메라를 검색합니다."/>
+                    <Button Style="{StaticResource BaseButton}"
+                            Content="취소"
+                            Command="{Binding CancelScanCommand}"
+                            ToolTip="진행 중인 카메라 검색 작업을 중단합니다."/>
                     <Separator Margin="8,0" Width="1" Background="{StaticResource BorderBrushSoft}"/>
-                    <Button Style="{StaticResource BaseButton}" Content="전체선택" Command="{Binding SelectAllCommand}"/>
-                    <Button Style="{StaticResource BaseButton}" Content="선택해제" Command="{Binding ClearSelectionCommand}"/>
+                    <Button Style="{StaticResource BaseButton}"
+                            Content="전체선택"
+                            Command="{Binding SelectAllCommand}"
+                            ToolTip="목록에 표시된 모든 카메라를 선택 상태로 변경합니다."/>
+                    <Button Style="{StaticResource BaseButton}"
+                            Content="선택해제"
+                            Command="{Binding ClearSelectionCommand}"
+                            ToolTip="현재 선택된 카메라를 모두 선택 해제합니다."/>
                     <Separator Margin="8,0" Width="1" Background="{StaticResource BorderBrushSoft}"/>
-                    <Button Style="{StaticResource BaseButton}" MinWidth="220"
+                    <Button Style="{StaticResource BaseButton}"
+                            MinWidth="220"
                             Content="선택 열기 (브라우저/로그인 시도)"
-                            Command="{Binding OpenSelectedInBrowserCommand}"/>
+                            Command="{Binding OpenSelectedInBrowserCommand}"
+                            ToolTip="선택된 카메라들을 기본 웹 브라우저에서 열고, 설정한 계정으로 로그인을 시도합니다."/>
                 </StackPanel>
             </Grid>
         </Border>
 
         <!-- 리스트 (온라인만 표시: ItemsSource=CamerasView) -->
-        <Border Grid.Row="2" Margin="16" Style="{StaticResource CardBorder}">
+        <Border Grid.Row="2" Margin="16" Style="{StaticResource CardBorder}"
+                ToolTip="검색된 카메라 목록을 확인하고 선택할 수 있는 영역입니다.">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
@@ -208,18 +244,23 @@
                 </Grid.RowDefinitions>
 
                 <!-- Empty-state 안내 -->
-                <TextBlock Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center"
+                <TextBlock Grid.Row="0"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
                            Foreground="{StaticResource TextMuted}"
-                           Visibility="{Binding ElementName=LbCameras, Path=HasItems, Converter={StaticResource NullToVisibilityConverter}}">
+                           Visibility="{Binding ElementName=LbCameras, Path=HasItems, Converter={StaticResource NullToVisibilityConverter}}"
+                           ToolTip="검색 결과가 없을 때 표시되는 안내 문구입니다.">
                     스캔 결과가 없습니다. 상단의 SCAN을 눌러 검색하세요.
                 </TextBlock>
 
-                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto"
+                              ToolTip="목록을 스크롤하여 검색된 카메라들을 확인할 수 있습니다.">
                     <ListBox x:Name="LbCameras"
                              ItemsSource="{Binding CamerasView}"
                              SelectedItem="{Binding SelectedCamera}"
                              BorderThickness="0"
-                             MinHeight="380">
+                             MinHeight="380"
+                             ToolTip="검색된 카메라 목록입니다. 항목을 클릭하여 선택하거나, 더블클릭으로 바로 열 수 있습니다.">
                         <ListBox.ItemContainerStyle>
                             <Style BasedOn="{StaticResource {x:Type ListBoxItem}}"
                                    TargetType="ListBoxItem"/>
@@ -227,7 +268,7 @@
 
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <Grid>
+                                <Grid ToolTip="하나의 카메라 항목입니다. 체크박스, 상태 점, IP, 기능 정보를 포함합니다.">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="28"/>
                                         <!-- 체크 -->
@@ -239,19 +280,30 @@
                                         <!-- 타입/기타 -->
                                     </Grid.ColumnDefinitions>
 
-                                    <CheckBox Grid.Column="0" VerticalAlignment="Center"
-                                              IsChecked="{Binding IsSelected}"/>
+                                    <CheckBox Grid.Column="0"
+                                              VerticalAlignment="Center"
+                                              IsChecked="{Binding IsSelected}"
+                                              ToolTip="이 카메라를 선택하거나 선택 해제합니다. 선택된 항목은 일괄 열기 대상이 됩니다." />
 
-                                    <Ellipse Grid.Column="1" Width="10" Height="10" VerticalAlignment="Center"
-                                             Fill="{Binding IsOnline, Converter={StaticResource BooleanToBrushConverter}}"/>
+                                    <Ellipse Grid.Column="1"
+                                             Width="10"
+                                             Height="10"
+                                             VerticalAlignment="Center"
+                                             Fill="{Binding IsOnline, Converter={StaticResource BooleanToBrushConverter}}"
+                                             ToolTip="카메라 온라인 상태를 표시합니다. 초록색이면 연결 가능, 빨간색이면 오프라인입니다." />
 
-                                    <TextBlock Grid.Column="2" Text="{Binding Ip}" VerticalAlignment="Center"
-                                               FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Column="2"
+                                               Text="{Binding Ip}"
+                                               VerticalAlignment="Center"
+                                               FontWeight="SemiBold"
+                                               ToolTip="카메라의 IP 주소입니다." />
 
-                                    <TextBlock Grid.Column="3" VerticalAlignment="Center"
+                                    <TextBlock Grid.Column="3"
+                                               VerticalAlignment="Center"
                                                Foreground="{StaticResource TextMuted}"
                                                Visibility="{Binding StreamUrl, Converter={StaticResource NullToVisibilityConverter}}"
-                                               Text="MJPEG 가능"/>
+                                               Text="MJPEG 가능"
+                                               ToolTip="해당 카메라에서 MJPEG 스트리밍을 사용할 수 있음을 의미합니다."/>
                                 </Grid>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
@@ -259,18 +311,27 @@
                 </ScrollViewer>
 
                 <!-- 하단 라벨(선택 정보) -->
-                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="6,8,6,0">
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="6,8,6,0"
+                            ToolTip="현재 선택된 카메라의 기본 정보를 표시합니다.">
                     <TextBlock Text="선택:" Foreground="{StaticResource TextMuted}"/>
-                    <TextBlock Text="{Binding SelectedCamera.Ip, FallbackValue=없음}" Margin="6,0,0,0"/>
+                    <TextBlock Text="{Binding SelectedCamera.Ip, FallbackValue=없음}" Margin="6,0,0,0"
+                               ToolTip="현재 선택된 카메라의 IP 주소입니다. 선택된 항목이 없으면 '없음'으로 표시됩니다."/>
                 </StackPanel>
             </Grid>
         </Border>
 
         <!-- 상태바 -->
-        <Border Grid.Row="3" Background="#EEF2F7" Padding="10,8" BorderBrush="{StaticResource BorderBrushSoft}" BorderThickness="1,0,0,0">
+        <Border Grid.Row="3"
+                Background="#EEF2F7"
+                Padding="10,8"
+                BorderBrush="{StaticResource BorderBrushSoft}"
+                BorderThickness="1,0,0,0"
+                ToolTip="카메라 플레이어 및 작업 상태를 요약해서 보여줍니다.">
             <DockPanel>
-                <TextBlock Text="{Binding PlayerStatus}" Foreground="#374151" />
-               <!-- <TextBlock DockPanel.Dock="Right" Foreground="{StaticResource TextMuted}">
+                <TextBlock Text="{Binding PlayerStatus}"
+                           Foreground="#374151"
+                           ToolTip="현재 카메라 스트림 재생 상태 또는 마지막 작업 결과가 표시됩니다." />
+                <!-- <TextBlock DockPanel.Dock="Right" Foreground="{StaticResource TextMuted}">
                     힌트: 결과 행 더블클릭으로도 열 수 있어요 
                 </TextBlock> -->
             </DockPanel>

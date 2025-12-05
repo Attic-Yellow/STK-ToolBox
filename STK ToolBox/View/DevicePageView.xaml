@@ -9,6 +9,8 @@
 
         <!-- TabControl 스타일 재정의 -->
         <Style TargetType="Controls:MetroTabControl" BasedOn="{StaticResource {x:Type Controls:MetroTabControl}}">
+            <Setter Property="ToolTip"
+                    Value="장비 관련 기능(시간 동기화, CCTV, 인버터)을 탭으로 전환할 수 있습니다."/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TabControl">
@@ -20,21 +22,23 @@
 
                             <!-- 균등 배치 TabPanel -->
                             <UniformGrid Grid.Row="0" 
-                                 IsItemsHost="True"
-                                 Rows="1"
-                                 HorizontalAlignment="Stretch"
-                                 Margin="0,0,0,6"/>
+                                         IsItemsHost="True"
+                                         Rows="1"
+                                         HorizontalAlignment="Stretch"
+                                         Margin="0,0,0,6"
+                                         ToolTip="각 탭을 클릭하여 해당 Device 기능 화면으로 이동합니다." />
 
                             <ContentPresenter Grid.Row="1"
-                                      ContentSource="SelectedContent"
-                                      SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
-                                      Margin="{TemplateBinding Padding}"/>
+                                              ContentSource="SelectedContent"
+                                              SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"
+                                              Margin="{TemplateBinding Padding}"
+                                              ToolTip="선택된 탭의 상세 Device 화면입니다."/>
                         </Grid>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
-        
+
         <!-- 탭 스타일 커스터마이즈 -->
         <Style TargetType="TabItem" BasedOn="{StaticResource {x:Type TabItem}}">
             <Setter Property="MinWidth" Value="120"/>
@@ -45,22 +49,24 @@
             <Setter Property="Background" Value="#E3F2FD"/>
             <Setter Property="Foreground" Value="#1565C0"/>
             <Setter Property="FontWeight" Value="Bold"/>
+            <!-- 헤더 텍스트를 그대로 툴팁으로 사용 -->
+            <Setter Property="ToolTip" Value="{Binding Header, RelativeSource={RelativeSource Self}}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TabItem">
                         <Border x:Name="Bd"
-                        Background="{TemplateBinding Background}"
-                        CornerRadius="6"
-                        BorderBrush="#90CAF9"
-                        BorderThickness="1"
-                        Padding="{TemplateBinding Padding}"
-                        SnapsToDevicePixels="True"
-                        Margin="2,0"
-                        MinHeight="{TemplateBinding MinHeight}">
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="6"
+                                BorderBrush="#90CAF9"
+                                BorderThickness="1"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True"
+                                Margin="2,0"
+                                MinHeight="{TemplateBinding MinHeight}">
                             <ContentPresenter x:Name="Content"
-                                      ContentSource="Header"
-                                      HorizontalAlignment="Center"
-                                      VerticalAlignment="Center"/>
+                                              ContentSource="Header"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <!-- 선택된 탭 -->
@@ -79,9 +85,11 @@
             </Setter>
         </Style>
     </UserControl.Resources>
-    
-    <Grid Background="#F4F6F9">
-        <avalonDock:DockingManager x:Name="DockManager">
+
+    <Grid Background="#F4F6F9"
+          ToolTip="시간 동기화, CCTV 모니터링, 인버터 제어 등 장비(Device) 관련 기능을 모아둔 페이지입니다.">
+        <avalonDock:DockingManager x:Name="DockManager"
+                                   ToolTip="Device 전용 레이아웃 영역입니다. AvalonDock를 통해 도킹/레이아웃을 관리합니다.">
             <avalonDock:LayoutRoot>
                 <avalonDock:LayoutPanel Orientation="Horizontal">
                     <avalonDock:LayoutPanel Orientation="Vertical" DockWidth="*">
@@ -89,33 +97,51 @@
                             <avalonDock:LayoutAnchorable Title="Device"
                                                          ContentId="DeviceView"
                                                          CanHide="False"
-                                                         CanClose="False">
+                                                         CanClose="False"
+                                                         ToolTip="장비 관련 도구(Device TimeSync, CCTV, Inverter)를 포함한 메인 패널입니다.">
 
                                 <!-- Device 탭 컨트롤 -->
                                 <Controls:MetroTabControl x:Name="DeviceTabControl"
                                                           Margin="10"
                                                           FontSize="16"
-                                                          TabStripPlacement="Top">
+                                                          TabStripPlacement="Top"
+                                                          ToolTip="각 탭에서 시간 동기화 / CCTV / Inverter 기능을 사용할 수 있습니다.">
+
                                     <!-- 시간 동기화 -->
-                                    <TabItem Header="시간 동기화">
-                                        <Border Background="White" CornerRadius="10" Padding="15" Margin="5">
+                                    <TabItem Header="시간 동기화"
+                                             ToolTip="LAN 상의 PC 시간들을 메인 PC 시간과 동기화하는 기능입니다.">
+                                        <Border Background="White"
+                                                CornerRadius="10"
+                                                Padding="15"
+                                                Margin="5"
+                                                ToolTip="TimeSync 화면입니다. PC 리스트 스캔, 계정 설정, 선택된 PC 시간 동기화를 수행합니다.">
                                             <ConLayOut:TimeSyncControl />
                                         </Border>
                                     </TabItem>
 
                                     <!-- CCTV -->
-                                    <TabItem Header="CCTV">
-                                        <Border Background="White" CornerRadius="10" Padding="15" Margin="5">
+                                    <TabItem Header="CCTV"
+                                             ToolTip="CCTV 카메라 연결 상태 확인 및 영상 스트리밍/모니터링 기능입니다.">
+                                        <Border Background="White"
+                                                CornerRadius="10"
+                                                Padding="15"
+                                                Margin="5"
+                                                ToolTip="Camera Control 화면입니다. 각 CCTV IP를 등록·선택하고, 실시간 영상 또는 스냅샷을 확인합니다.">
                                             <ConLayOut:CameraControl />
                                         </Border>
                                     </TabItem>
-                                    
-                                    <!-- Inverter (CC-Link -->
-                                   <TabItem Header="Inverter">
-                                        <Border Background="White" CornerRadius="10" Padding="15" Margin="5">
+
+                                    <!-- Inverter (CC-Link) -->
+                                    <TabItem Header="Inverter"
+                                             ToolTip="CC-Link 기반 인버터 스테이션의 상태 모니터링 및 제어 기능입니다.">
+                                        <Border Background="White"
+                                                CornerRadius="10"
+                                                Padding="15"
+                                                Margin="5"
+                                                ToolTip="Inverter Control 화면입니다. CC-Link 통신으로 인버터 상태를 모니터링하고, 필요 시 제어를 수행합니다.">
                                             <ConLayOut:InverterControl />
                                         </Border>
-                                    </TabItem> 
+                                    </TabItem>
                                 </Controls:MetroTabControl>
 
                             </avalonDock:LayoutAnchorable>

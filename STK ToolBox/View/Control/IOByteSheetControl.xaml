@@ -174,7 +174,8 @@
                 CornerRadius="6"
                 Background="{StaticResource CardBackgroundBrush}"
                 BorderBrush="{StaticResource CardBorderBrush}"
-                BorderThickness="1">
+                BorderThickness="1"
+                ToolTip="인버터 세그먼트 설정과 IOMonitoring(DB) 상태를 확인하는 영역입니다. IOMonitoring 테이블이 완성된 상태에서 사용하는 것을 전제로 합니다.">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="3*"/>
@@ -183,60 +184,80 @@
 
                 <!-- 인버터 설정 -->
                 <StackPanel Grid.Column="0" Orientation="Vertical">
-                    <TextBlock Text="인버터 설정" Style="{StaticResource SectionTitleText}"/>
+                    <TextBlock Text="인버터 설정"
+                               Style="{StaticResource SectionTitleText}"
+                               ToolTip="IO Byte Sheet에 포함할 인버터 X/Y 세그먼트 범위를 설정합니다." />
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                         <CheckBox Content="인버터 설정 사용"
                                   IsChecked="{Binding UseInverterConfig, UpdateSourceTrigger=PropertyChanged}"
                                   VerticalAlignment="Center"
-                                  Margin="0,0,10,0"/>
+                                  Margin="0,0,10,0"
+                                  ToolTip="체크 시 인버터 구간을 X/Y 모두에 자동으로 추가합니다. 인버터 스테이션은 중간을 건너뛸 수 없고 연속 구간으로만 취급됩니다."/>
                         <TextBlock Text="체크 시 X / Y 모두 인버터 구간을 추가합니다."
                                    VerticalAlignment="Center"
                                    Foreground="{StaticResource SubTextBrush}"
-                                   FontSize="11"/>
+                                   FontSize="11"
+                                   ToolTip="인버터 설정이 활성화되면 지정한 채널과 Station 정보로 X/Y 세그먼트에 인버터 영역이 자동 생성됩니다."/>
                     </StackPanel>
 
                     <UniformGrid Columns="4" Margin="0,0,0,2">
                         <StackPanel Orientation="Horizontal" Margin="0,0,20,4">
-                            <TextBlock Text="Channel" Style="{StaticResource FieldLabelText}"/>
+                            <TextBlock Text="Channel"
+                                       Style="{StaticResource FieldLabelText}"
+                                       ToolTip="인버터가 연결된 CC-Link 또는 네트워크 채널 번호입니다."/>
                             <TextBox Text="{Binding InverterChannel, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource FieldTextBox}"/>
+                                     Style="{StaticResource FieldTextBox}"
+                                     ToolTip="인버터 채널 번호를 입력합니다. 예를 들어 1, 2와 같은 정수 값을 사용합니다."/>
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" Margin="0,0,20,4">
-                            <TextBlock Text="Station 수" Style="{StaticResource FieldLabelText}"/>
+                            <TextBlock Text="Station 수"
+                                       Style="{StaticResource FieldLabelText}"
+                                       ToolTip="인버터가 사용하는 Station 개수입니다. 인버터 Station은 중간을 뺄 수 없고 연속으로 배치된다고 가정합니다."/>
                             <TextBox Text="{Binding StationCount, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource FieldTextBox}"/>
+                                     Style="{StaticResource FieldTextBox}"
+                                     ToolTip="인버터가 연속으로 차지하는 Station의 개수를 입력합니다."/>
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" Margin="0,0,20,4">
-                            <TextBlock Text="Byte/Station" Style="{StaticResource FieldLabelText}"/>
+                            <TextBlock Text="Byte/Station"
+                                       Style="{StaticResource FieldLabelText}"
+                                       ToolTip="각 Station 당 사용하는 Byte 수입니다."/>
                             <TextBox Text="{Binding BytesPerStation, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource FieldTextBox}"/>
+                                     Style="{StaticResource FieldTextBox}"
+                                     ToolTip="인버터 한 Station이 차지하는 Byte 수를 입력합니다. 예: 4, 8 등."/>
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" Margin="0,0,20,4">
-                            <TextBlock Text="시작 Addr (HEX)" Style="{StaticResource FieldLabelText}"/>
+                            <TextBlock Text="시작 Addr (HEX)"
+                                       Style="{StaticResource FieldLabelText}"
+                                       ToolTip="인버터 세그먼트의 시작 주소(16진수)입니다."/>
                             <TextBox Text="{Binding StartAddressHex, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource FieldTextBox}"/>
+                                     Style="{StaticResource FieldTextBox}"
+                                     ToolTip="예: 1000, 1100 등 16진수 시작 주소를 입력합니다. IO Byte Sheet의 인버터 구간 시작 위치가 됩니다."/>
                         </StackPanel>
                     </UniformGrid>
                 </StackPanel>
 
                 <!-- DB 상태 -->
                 <StackPanel Grid.Column="1" Orientation="Vertical" Margin="20,0,0,0">
-                    <TextBlock Text="DB 상태" Style="{StaticResource SectionTitleText}"/>
+                    <TextBlock Text="DB 상태"
+                               Style="{StaticResource SectionTitleText}"
+                               ToolTip="IOMonitoring(DB)에서 읽어온 IO 정보 상태를 보여줍니다." />
 
                     <TextBlock Text="{Binding DbStatusMessage}"
                                Foreground="{StaticResource SubTextBrush}"
                                TextWrapping="Wrap"
                                Margin="0,0,0,6"
-                               FontSize="11"/>
+                               FontSize="11"
+                               ToolTip="현재 IOMonitoring 테이블 읽기 결과나 오류 메시지가 표시됩니다. IOMonitoring 테이블이 완성된 뒤 사용하는 것이 권장됩니다." />
 
                     <Button Content="IOMonitoring 다시 읽기"
                             Command="{Binding RefreshFromDbCommand}"
                             Style="{StaticResource FlatButton}"
-                            Width="170"/>
+                            Width="170"
+                            ToolTip="DB의 IOMonitoring 테이블을 다시 읽어 IO 세그먼트 정보를 갱신합니다."/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -248,7 +269,8 @@
                 CornerRadius="6"
                 Background="White"
                 BorderBrush="{StaticResource CardBorderBrush}"
-                BorderThickness="1">
+                BorderThickness="1"
+                ToolTip="IO Byte Sheet 엑셀 파일 출력에 대한 경로와 기본 설정을 지정하는 영역입니다.">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="3*"/>
@@ -257,37 +279,49 @@
 
                 <!-- 경로 / 파일명 -->
                 <StackPanel Grid.Column="0" Orientation="Vertical" Margin="0,0,10,0">
-                    <TextBlock Text="엑셀 출력 설정" Style="{StaticResource SectionTitleText}"/>
+                    <TextBlock Text="엑셀 출력 설정"
+                               Style="{StaticResource SectionTitleText}"
+                               ToolTip="생성할 IO Byte Sheet 엑셀 파일의 저장 위치와 파일 이름을 설정합니다." />
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                        <TextBlock Text="폴더" Style="{StaticResource FieldLabelText}"/>
+                        <TextBlock Text="폴더"
+                                   Style="{StaticResource FieldLabelText}"
+                                   ToolTip="엑셀 파일을 저장할 폴더 경로입니다."/>
                         <TextBlock Text="{Binding OutputFolder}"
                                    Style="{StaticResource PathText}"
                                    Margin="0,0,8,0"
-                                   Width="260"/>
+                                   Width="260"
+                                   ToolTip="현재 설정된 엑셀 저장 폴더입니다. 경로가 길면 끝이 … 으로 생략되어 표시됩니다."/>
                         <Button Content="찾기"
                                 Command="{Binding BrowseFolderCommand}"
                                 Style="{StaticResource FlatButton}"
-                                Width="70"/>
+                                Width="70"
+                                ToolTip="IO Byte Sheet 엑셀 파일을 저장할 폴더를 탐색기에서 선택합니다."/>
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="파일명" Style="{StaticResource FieldLabelText}"/>
+                        <TextBlock Text="파일명"
+                                   Style="{StaticResource FieldLabelText}"
+                                   ToolTip="생성할 엑셀 파일의 기본 이름입니다. 확장자는 자동으로 .xlsx가 붙습니다."/>
                         <TextBox Text="{Binding OutputFileName}"
                                  VerticalAlignment="Center"
                                  Width="180"
-                                 Margin="0,0,4,0"/>
+                                 Margin="0,0,4,0"
+                                 ToolTip="엑셀 파일 이름을 입력합니다. 예: IO_ByteSheet_STK01 등."/>
                         <TextBlock Text=".xlsx"
                                    VerticalAlignment="Center"
-                                   Foreground="{StaticResource SubTextBrush}"/>
+                                   Foreground="{StaticResource SubTextBrush}"
+                                   ToolTip="엑셀 파일 확장자는 .xlsx로 고정입니다."/>
                     </StackPanel>
                 </StackPanel>
 
                 <!-- 설정 저장/불러오기 + Export + 도움말 -->
                 <StackPanel Grid.Column="1" Orientation="Vertical"
                             HorizontalAlignment="Right">
-                    <TextBlock Text="설정 / 내보내기" Style="{StaticResource SectionTitleText}"
-                               HorizontalAlignment="Right"/>
+                    <TextBlock Text="설정 / 내보내기"
+                               Style="{StaticResource SectionTitleText}"
+                               HorizontalAlignment="Right"
+                               ToolTip="현재 IO Byte Sheet 설정을 저장하거나 불러오고, 엑셀을 생성할 수 있는 영역입니다." />
 
                     <StackPanel Orientation="Horizontal"
                                 HorizontalAlignment="Right"
@@ -295,11 +329,13 @@
                         <Button Content="설정 불러오기"
                                 Command="{Binding LoadSettingsCommand}"
                                 Style="{StaticResource FlatButton}"
-                                Width="100"/>
+                                Width="100"
+                                ToolTip="이전에 저장해 둔 IO Byte Sheet 설정 파일을 불러옵니다."/>
                         <Button Content="설정 저장"
                                 Command="{Binding SaveSettingsCommand}"
                                 Style="{StaticResource FlatButton}"
-                                Width="90"/>
+                                Width="90"
+                                ToolTip="현재 인버터 설정, 출력 경로 등 IO Byte Sheet 관련 설정을 파일로 저장합니다."/>
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal"
@@ -309,12 +345,14 @@
                                 Command="{Binding ExportCommand}"
                                 Style="{StaticResource PrimaryButton}"
                                 Width="200"
-                                HorizontalAlignment="Right"/>
+                                HorizontalAlignment="Right"
+                                ToolTip="IOMonitoring 테이블과 인버터 설정을 기반으로 IO Byte Sheet 엑셀 파일을 생성합니다. 인버터 Station은 중간을 건너뛸 수 없고 연속 영역으로만 생성됩니다."/>
                         <Button Content="도움말"
                                 Command="{Binding HelpCommand}"
                                 Style="{StaticResource FlatButton}"
                                 Width="70"
-                                HorizontalAlignment="Right"/>
+                                HorizontalAlignment="Right"
+                                ToolTip="IO Byte Sheet 생성 사용 방법과 전제 조건, 인버터 스테이션 제약 사항을 안내합니다."/>
                     </StackPanel>
 
                     <TextBlock Text="{Binding ExportStatusMessage}"
@@ -323,13 +361,16 @@
                                Margin="0,4,0,0"
                                TextWrapping="Wrap"
                                HorizontalAlignment="Right"
-                               Width="220"/>
+                               Width="220"
+                               ToolTip="최근 엑셀 내보내기 결과 또는 경고 메시지가 표시됩니다."/>
                 </StackPanel>
             </Grid>
         </Border>
 
         <!-- 3. IO Byte 세그먼트 (X / Y 각각 탭 + 스크롤) -->
-        <Border Grid.Row="2" Style="{StaticResource CardBorderStyle}">
+        <Border Grid.Row="2"
+                Style="{StaticResource CardBorderStyle}"
+                ToolTip="IOMonitoring에서 읽어온 IO들을 Byte 단위 세그먼트로 정리한 리스트입니다. X와 Y를 구분하여 IO Byte 시트를 확인할 수 있습니다.">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -338,11 +379,14 @@
 
                 <TextBlock Grid.Row="0"
                            Text="IOMonitoring 기반 IO Byte 세그먼트 (X / Y 구분)"
-                           Style="{StaticResource SectionTitleText}"/>
+                           Style="{StaticResource SectionTitleText}"
+                           ToolTip="IOMonitoring 테이블을 바탕으로 생성된 X/Y IO Byte 세그먼트 리스트입니다." />
 
-                <TabControl Grid.Row="1" Margin="0,2,0,0">
+                <TabControl Grid.Row="1" Margin="0,2,0,0"
+                            ToolTip="X/Y 탭을 전환하여 각 Device별 IO Byte 세그먼트를 확인합니다. 인버터 세그먼트도 해당 Device에 포함됩니다.">
                     <!-- X 탭 -->
-                    <TabItem Header="X 세그먼트">
+                    <TabItem Header="X 세그먼트"
+                             ToolTip="Device가 X인 IO Byte 세그먼트 목록입니다.">
                         <DataGrid ItemsSource="{Binding Source={StaticResource SegmentsXView}}"
                                   AutoGenerateColumns="False"
                                   IsReadOnly="True"
@@ -352,7 +396,8 @@
                                   GridLinesVisibility="None"
                                   RowStyle="{StaticResource SegmentRowStyle}"
                                   ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                  ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                  ToolTip="X(Device=X) IO 세그먼트 상세 목록입니다. 각 행이 하나의 세그먼트를 의미하며 채널, 시작 주소, Byte 수, 출처 정보를 보여줍니다.">
                             <DataGrid.Resources>
                                 <Style TargetType="DataGridColumnHeader">
                                     <Setter Property="Background" Value="{StaticResource CardHeaderBrush}"/>
@@ -361,6 +406,8 @@
                                     <Setter Property="BorderBrush" Value="#D0D7E2"/>
                                     <Setter Property="BorderThickness" Value="0,0,0,1"/>
                                     <Setter Property="Padding" Value="4,2"/>
+                                    <Setter Property="ToolTip"
+                                            Value="각 열은 세그먼트의 채널, Device(X/Y), 시작 주소, Byte 수, 출처 정보를 나타냅니다."/>
                                 </Style>
                             </DataGrid.Resources>
                             <DataGrid.Columns>
@@ -379,7 +426,8 @@
                     </TabItem>
 
                     <!-- Y 탭 -->
-                    <TabItem Header="Y 세그먼트">
+                    <TabItem Header="Y 세그먼트"
+                             ToolTip="Device가 Y인 IO Byte 세그먼트 목록입니다. 인버터 출력이나 기타 Y 출력 영역이 포함됩니다.">
                         <DataGrid ItemsSource="{Binding Source={StaticResource SegmentsYView}}"
                                   AutoGenerateColumns="False"
                                   IsReadOnly="True"
@@ -389,7 +437,8 @@
                                   GridLinesVisibility="None"
                                   RowStyle="{StaticResource SegmentRowStyle}"
                                   ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                  ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                  ToolTip="Y(Device=Y) IO 세그먼트 상세 목록입니다. 인버터 Y 출력과 일반 Y 출력 영역을 함께 보여줍니다.">
                             <DataGrid.Resources>
                                 <Style TargetType="DataGridColumnHeader">
                                     <Setter Property="Background" Value="{StaticResource CardHeaderBrush}"/>
@@ -398,6 +447,8 @@
                                     <Setter Property="BorderBrush" Value="#D0D7E2"/>
                                     <Setter Property="BorderThickness" Value="0,0,0,1"/>
                                     <Setter Property="Padding" Value="4,2"/>
+                                    <Setter Property="ToolTip"
+                                            Value="각 열은 세그먼트의 채널, Device(X/Y), 시작 주소, Byte 수, 출처 정보를 나타냅니다."/>
                                 </Style>
                             </DataGrid.Resources>
                             <DataGrid.Columns>
@@ -419,12 +470,15 @@
         </Border>
 
         <!-- 4. 하단 상태 메시지 -->
-        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="2,2,0,0">
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="2,2,0,0"
+                    ToolTip="설정 파일 로드/저장과 엑셀 내보내기 관련 상태 메시지가 표시되는 영역입니다.">
             <TextBlock Text="{Binding SettingsStatusMessage}"
                        Style="{StaticResource CaptionText}"
-                       Margin="0,0,12,0"/>
+                       Margin="0,0,12,0"
+                       ToolTip="최근 설정 파일 불러오기 또는 저장 결과 메시지가 표시됩니다."/>
             <TextBlock Text="{Binding ExportStatusMessage}"
-                       Style="{StaticResource CaptionText}"/>
+                       Style="{StaticResource CaptionText}"
+                       ToolTip="최근 IO Byte Sheet 엑셀 생성 결과나 경고 메시지가 표시됩니다."/>
         </StackPanel>
 
     </Grid>

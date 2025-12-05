@@ -14,15 +14,25 @@
             <!-- 원하는 룩 유지 -->
             <Setter Property="Background" Value="White"/>
             <Setter Property="BorderBrush" Value="#BDBDBD"/>
+            <Setter Property="ToolTip"
+                    Value="ServoParameter.ini에서 읽어온 값입니다. 여기서는 편집할 수 없습니다."/>
         </Style>
     </UserControl.Resources>
 
     <Grid Background="#F4F4F8">
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <StackPanel Margin="20" HorizontalAlignment="Center" MaxWidth="600" VerticalAlignment="Top">
+        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                      ToolTip="현재 축의 SoftLimit 값을 확인하고, 새로운 값으로 계산·적용할 수 있습니다.">
+            <StackPanel Margin="20"
+                        HorizontalAlignment="Center"
+                        MaxWidth="600"
+                        VerticalAlignment="Top">
 
                 <!-- 현재 SoftLimit 값 (진짜 읽기 전용) -->
-                <GroupBox Header="현재 SOFTLIMIT 값 (읽기 전용)" Margin="0,0,0,10" FontSize="16" Padding="10">
+                <GroupBox Header="현재 SOFTLIMIT 값 (읽기 전용)"
+                          Margin="0,0,0,10"
+                          FontSize="16"
+                          Padding="10"
+                          ToolTip="ServoParameter.ini에서 읽어온 현재 SoftLimit(Pr.228~22B) 값입니다. 실제 INI 수정은 아래 [SOFTLIMIT 값 입력 및 적용] 영역에서 진행합니다.">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -36,51 +46,94 @@
                         </Grid.ColumnDefinitions>
 
                         <!-- Plus -->
-                        <Label Content="Plus (Pr.228 + 229)" FontSize="14" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"
-                               ToolTip="INI에서 읽어온 플러스 리미트 값입니다."/>
-                        <StackPanel Grid.ColumnSpan="4" Orientation="Horizontal" VerticalAlignment="Center" Margin="150,0,-25,0">
+                        <Label Content="Plus (Pr.228 + 229)"
+                               FontSize="14"
+                               Grid.Row="0"
+                               Grid.Column="0"
+                               VerticalAlignment="Center"
+                               ToolTip="플러스(+) 방향 소프트 리미트 값입니다. Pr.228(하위), Pr.229(상위) 두 파라미터의 조합으로 표현됩니다."/>
+                        <StackPanel Grid.ColumnSpan="4"
+                                    Orientation="Horizontal"
+                                    VerticalAlignment="Center"
+                                    Margin="150,0,-25,0">
                             <StackPanel Margin="10,0,10,0" MinWidth="90">
-                                <TextBlock Text="10진수" FontSize="12" HorizontalAlignment="Center"/>
+                                <TextBlock Text="10진수"
+                                           FontSize="12"
+                                           HorizontalAlignment="Center"/>
                                 <TextBox Style="{StaticResource ReadOnlyBox}"
-                                         Text="{Binding CurrentSoftLimitPlusDecimal, Mode=OneWay}" FontSize="14"/>
+                                         Text="{Binding CurrentSoftLimitPlusDecimal, Mode=OneWay}"
+                                         FontSize="14"
+                                         ToolTip="현재 플러스 SoftLimit의 10진수 값입니다."/>
                             </StackPanel>
                             <StackPanel Margin="10,0,10,0" MinWidth="85">
-                                <TextBlock Text="상위 HEX (229)" FontSize="12" HorizontalAlignment="Center"/>
+                                <TextBlock Text="상위 HEX (229)"
+                                           FontSize="12"
+                                           HorizontalAlignment="Center"/>
                                 <TextBox Style="{StaticResource ReadOnlyBox}"
-                                         Text="{Binding CurrentSoftLimitPlusHighHex, Mode=OneWay}" FontSize="14"/>
+                                         Text="{Binding CurrentSoftLimitPlusHighHex, Mode=OneWay}"
+                                         FontSize="14"
+                                         ToolTip="플러스 SoftLimit 상위 바이트 값입니다. (Pr.229, 16진수)"/>
                             </StackPanel>
                             <StackPanel Margin="10,0,10,0" MinWidth="85">
-                                <TextBlock Text="하위 HEX (228)" FontSize="12" HorizontalAlignment="Center"/>
+                                <TextBlock Text="하위 HEX (228)"
+                                           FontSize="12"
+                                           HorizontalAlignment="Center"/>
                                 <TextBox Style="{StaticResource ReadOnlyBox}"
-                                         Text="{Binding CurrentSoftLimitPlusLowHex, Mode=OneWay}" FontSize="14"/>
+                                         Text="{Binding CurrentSoftLimitPlusLowHex, Mode=OneWay}"
+                                         FontSize="14"
+                                         ToolTip="플러스 SoftLimit 하위 바이트 값입니다. (Pr.228, 16진수)"/>
                             </StackPanel>
                         </StackPanel>
 
                         <!-- Minus -->
-                        <Label Content="Minus (Pr.22A + 22B)" FontSize="14" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"
-                               ToolTip="INI에서 읽어온 마이너스 리미트 값입니다."/>
-                        <StackPanel Grid.Row="1" Grid.ColumnSpan="4" Orientation="Horizontal" VerticalAlignment="Center" Margin="150,0,-25,0">
+                        <Label Content="Minus (Pr.22A + 22B)"
+                               FontSize="14"
+                               Grid.Row="1"
+                               Grid.Column="0"
+                               VerticalAlignment="Center"
+                               ToolTip="마이너스(-) 방향 소프트 리미트 값입니다. Pr.22A(하위), Pr.22B(상위) 두 파라미터의 조합으로 표현됩니다."/>
+                        <StackPanel Grid.Row="1"
+                                    Grid.ColumnSpan="4"
+                                    Orientation="Horizontal"
+                                    VerticalAlignment="Center"
+                                    Margin="150,0,-25,0">
                             <StackPanel Margin="10,0,10,0" MinWidth="90">
-                                <TextBlock Text="10진수" FontSize="12" HorizontalAlignment="Center"/>
+                                <TextBlock Text="10진수"
+                                           FontSize="12"
+                                           HorizontalAlignment="Center"/>
                                 <TextBox Style="{StaticResource ReadOnlyBox}"
-                                         Text="{Binding CurrentSoftLimitMinusDecimal, Mode=OneWay}" FontSize="14"/>
+                                         Text="{Binding CurrentSoftLimitMinusDecimal, Mode=OneWay}"
+                                         FontSize="14"
+                                         ToolTip="현재 마이너스 SoftLimit의 10진수 값입니다."/>
                             </StackPanel>
                             <StackPanel Margin="10,0,10,0" MinWidth="85">
-                                <TextBlock Text="상위 HEX (22B)" FontSize="12" HorizontalAlignment="Center"/>
+                                <TextBlock Text="상위 HEX (22B)"
+                                           FontSize="12"
+                                           HorizontalAlignment="Center"/>
                                 <TextBox Style="{StaticResource ReadOnlyBox}"
-                                         Text="{Binding CurrentSoftLimitMinusHighHex, Mode=OneWay}" FontSize="14"/>
+                                         Text="{Binding CurrentSoftLimitMinusHighHex, Mode=OneWay}"
+                                         FontSize="14"
+                                         ToolTip="마이너스 SoftLimit 상위 바이트 값입니다. (Pr.22B, 16진수)"/>
                             </StackPanel>
                             <StackPanel Margin="10,0,10,0" MinWidth="85">
-                                <TextBlock Text="하위 HEX (22A)" FontSize="12" HorizontalAlignment="Center"/>
+                                <TextBlock Text="하위 HEX (22A)"
+                                           FontSize="12"
+                                           HorizontalAlignment="Center"/>
                                 <TextBox Style="{StaticResource ReadOnlyBox}"
-                                         Text="{Binding CurrentSoftLimitMinusLowHex, Mode=OneWay}" FontSize="14"/>
+                                         Text="{Binding CurrentSoftLimitMinusLowHex, Mode=OneWay}"
+                                         FontSize="14"
+                                         ToolTip="마이너스 SoftLimit 하위 바이트 값입니다. (Pr.22A, 16진수)"/>
                             </StackPanel>
                         </StackPanel>
                     </Grid>
                 </GroupBox>
 
                 <!-- 입력/적용 그룹 (사용자가 여기에 입력) -->
-                <GroupBox Header="SOFTLIMIT 값 입력 및 적용" Margin="0,0,0,20" FontSize="16" Padding="10">
+                <GroupBox Header="SOFTLIMIT 값 입력 및 적용"
+                          Margin="0,0,0,20"
+                          FontSize="16"
+                          Padding="10"
+                          ToolTip="축의 Max/Min 값과 상·하한치를 입력하면, 적용 버튼을 통해 SoftLimit 파라미터(Pr.228~22B)를 계산·적용합니다.">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -93,26 +146,81 @@
                             <ColumnDefinition Width="120"/>
                         </Grid.ColumnDefinitions>
 
-                        <Label Content="Max Value" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" FontSize="14"/>
-                        <TextBox Text="{Binding SoftLimitPlus, UpdateSourceTrigger=PropertyChanged}" Grid.Row="0" Grid.Column="1" Height="32" FontSize="14"/>
+                        <!-- Plus 입력 -->
+                        <Label Content="Max Value"
+                               Grid.Row="0"
+                               Grid.Column="0"
+                               VerticalAlignment="Center"
+                               FontSize="14"
+                               ToolTip="플러스(+) 방향 기준 위치 값입니다. 기계 도면/티칭 값 기준으로 입력합니다."/>
+                        <TextBox Text="{Binding SoftLimitPlus, UpdateSourceTrigger=PropertyChanged}"
+                                 Grid.Row="0"
+                                 Grid.Column="1"
+                                 Height="32"
+                                 FontSize="14"
+                                 ToolTip="플러스(+) 방향 Max Value를 입력합니다. (예: 모터 펄스, mm 단위 등 프로젝트 기준 단위 사용)"/>
 
-                        <Label Content="상한치" Grid.Row="0" Grid.Column="2" VerticalAlignment="Center" FontSize="14"/>
-                        <TextBox Text="{Binding SoftLimitPlusDelta, UpdateSourceTrigger=PropertyChanged}" Grid.Row="0" Grid.Column="3" Height="32" FontSize="14"/>
+                        <Label Content="상한치"
+                               Grid.Row="0"
+                               Grid.Column="2"
+                               VerticalAlignment="Center"
+                               FontSize="14"
+                               ToolTip="Max Value에서 허용할 플러스 방향 여유값(Δ)입니다."/>
+                        <TextBox Text="{Binding SoftLimitPlusDelta, UpdateSourceTrigger=PropertyChanged}"
+                                 Grid.Row="0"
+                                 Grid.Column="3"
+                                 Height="32"
+                                 FontSize="14"
+                                 ToolTip="플러스 방향 상한 여유(Δ)를 입력합니다. 예: Max Value + Δ까지만 움직이도록 제한."/>
 
-                        <Label Content="Min Value" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" FontSize="14"/>
-                        <TextBox Text="{Binding SoftLimitMinus, UpdateSourceTrigger=PropertyChanged}" Grid.Row="1" Grid.Column="1" Height="32" FontSize="14"/>
+                        <!-- Minus 입력 -->
+                        <Label Content="Min Value"
+                               Grid.Row="1"
+                               Grid.Column="0"
+                               VerticalAlignment="Center"
+                               FontSize="14"
+                               ToolTip="마이너스(-) 방향 기준 위치 값입니다. 기계 도면/티칭 값 기준으로 입력합니다."/>
+                        <TextBox Text="{Binding SoftLimitMinus, UpdateSourceTrigger=PropertyChanged}"
+                                 Grid.Row="1"
+                                 Grid.Column="1"
+                                 Height="32"
+                                 FontSize="14"
+                                 ToolTip="마이너스(-) 방향 Min Value를 입력합니다."/>
 
-                        <Label Content="하한치" Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" FontSize="14"/>
-                        <TextBox Text="{Binding SoftLimitMinusDelta, UpdateSourceTrigger=PropertyChanged}" Grid.Row="1" Grid.Column="3" Height="32" FontSize="14"/>
+                        <Label Content="하한치"
+                               Grid.Row="1"
+                               Grid.Column="2"
+                               VerticalAlignment="Center"
+                               FontSize="14"
+                               ToolTip="Min Value에서 허용할 마이너스 방향 여유값(Δ)입니다."/>
+                        <TextBox Text="{Binding SoftLimitMinusDelta, UpdateSourceTrigger=PropertyChanged}"
+                                 Grid.Row="1"
+                                 Grid.Column="3"
+                                 Height="32"
+                                 FontSize="14"
+                                 ToolTip="마이너스 방향 하한 여유(Δ)를 입력합니다. 예: Min Value − Δ까지만 움직이도록 제한."/>
                     </Grid>
                 </GroupBox>
 
                 <!-- 버튼 영역 -->
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="적용" Width="140" Height="40" FontSize="15" Command="{Binding ApplyCommand}"/>
-                    <Button Content="초기화" Width="160" Height="40" FontSize="15"
-                            Margin="10,0,10,0" Background="#FF8A65" Foreground="White"
-                            Command="{Binding ZeroParamsCommand}"/>
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            ToolTip="입력한 값으로 SoftLimit를 계산해 INI에 반영하거나, SoftLimit 관련 파라미터를 0으로 초기화할 수 있습니다.">
+                    <Button Content="적용"
+                            Width="140"
+                            Height="40"
+                            FontSize="15"
+                            Command="{Binding ApplyCommand}"
+                            ToolTip="위에서 입력한 Max/Min 및 상·하한 값을 기준으로 SoftLimit 파라미터(Pr.228~22B)를 계산하여 INI에 적용합니다. 적용 전 백업을 권장합니다."/>
+                    <Button Content="초기화"
+                            Width="160"
+                            Height="40"
+                            FontSize="15"
+                            Margin="10,0,10,0"
+                            Background="#FF8A65"
+                            Foreground="White"
+                            Command="{Binding ZeroParamsCommand}"
+                            ToolTip="현재 선택된 축의 SoftLimit 관련 파라미터(Pr.228, 229, 22A, 22B)를 0으로 초기화합니다. (주의: 실제 장비 동작 범위에 영향)"/>
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>

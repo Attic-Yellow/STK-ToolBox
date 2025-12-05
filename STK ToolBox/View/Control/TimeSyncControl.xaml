@@ -72,7 +72,8 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid Margin="10">
+    <Grid Margin="10"
+          ToolTip="LAN 상의 PC들을 스캔하고 선택된 PC들의 시간을 메인 PC와 동기화하는 도구입니다.">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="703*"/>
             <ColumnDefinition Width="51*"/>
@@ -91,44 +92,67 @@
         </Grid.RowDefinitions>
 
         <!-- 진행률 -->
-        <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,12" Grid.ColumnSpan="2">
+        <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,12" Grid.ColumnSpan="2"
+                    ToolTip="현재 IP 스캔 진행률을 나타냅니다. Scan 실행 시 증가합니다.">
             <TextBlock Text="탐색 진행률:"/>
-            <ProgressBar Value="{Binding ScanProgress}" Minimum="0" Maximum="100" Width="200" Height="18" Margin="6,0"/>
-            <TextBlock Text="{Binding ScanProgress}" Margin="10,0"/>
+            <ProgressBar Value="{Binding ScanProgress}"
+                         Minimum="0" Maximum="100"
+                         Width="200" Height="18" Margin="6,0"
+                         ToolTip="IP 스캔 진행률 (%) 입니다."/>
+            <TextBlock Text="{Binding ScanProgress}" Margin="10,0"
+                       ToolTip="현재 스캔 진행률(%) 숫자 값입니다."/>
         </StackPanel>
 
         <!-- 기본(전역) 계정 입력 -->
-        <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="0,0,0,12" Grid.ColumnSpan="2">
-            <TextBlock Text="기본 계정(ID):"/>
-            <TextBox Width="150" Text="{Binding AdminId, UpdateSourceTrigger=PropertyChanged}"/>
-            <TextBlock Text="기본 비밀번호:"/>
-            <PasswordBox Width="150" x:Name="PwdBox"/>
-            <TextBlock Text="(※ IP별 개별 계정이 없을 때만 사용)" Margin="8,0,0,0" Foreground="#666"/>
+        <StackPanel Orientation="Horizontal" Grid.Row="1" Margin="0,0,0,12" Grid.ColumnSpan="2"
+                    ToolTip="IP별로 별도 계정이 설정되지 않은 PC에 공통으로 사용할 기본 계정을 설정합니다.">
+            <TextBlock Text="기본 계정(ID):"
+                       ToolTip="원격 접속에 사용할 기본 계정 ID입니다. 각 PC에 별도 계정이 없을 때만 사용됩니다."/>
+            <TextBox Width="150"
+                     Text="{Binding AdminId, UpdateSourceTrigger=PropertyChanged}"
+                     ToolTip="기본 계정(ID)을 입력하세요. IP별 개별 계정이 우선 적용됩니다."/>
+            <TextBlock Text="기본 비밀번호:"
+                       ToolTip="기본 계정의 비밀번호입니다."/>
+            <PasswordBox Width="150" x:Name="PwdBox"
+                         ToolTip="기본 계정의 비밀번호를 입력하세요. (화면에 노출되지 않습니다.)"/>
+            <TextBlock Text="(※ IP별 개별 계정이 없을 때만 사용)" Margin="8,0,0,0" Foreground="#666"
+                       ToolTip="각 PC별로 계정을 따로 지정하지 않은 경우에만 기본 계정/비밀번호가 사용됩니다."/>
         </StackPanel>
 
         <!-- 메인 PC + 스캔범위 + Scan 버튼 -->
-        <DockPanel Grid.Row="2" LastChildFill="True" Margin="0,0,0,12" Grid.ColumnSpan="2">
+        <DockPanel Grid.Row="2" LastChildFill="True" Margin="0,0,0,12" Grid.ColumnSpan="2"
+                   ToolTip="메인 PC를 선택하고, 스캔할 IP 대역과 Scan 실행을 설정하는 영역입니다.">
+
             <!-- 메인PC 선택 -->
             <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                <TextBlock Text="메인 PC 선택:" VerticalAlignment="Center"/>
+                <TextBlock Text="메인 PC 선택:" VerticalAlignment="Center"
+                           ToolTip="시간 기준이 될 메인 PC를 선택합니다. 선택된 PC의 시간이 기준 시간으로 사용됩니다."/>
                 <ComboBox ItemsSource="{Binding PcList}" 
                           SelectedItem="{Binding SelectedPc}" 
                           DisplayMemberPath="Ip" 
-                          Width="200" Margin="8,0,16,0"/>
+                          Width="200" Margin="8,0,16,0"
+                          ToolTip="메인 PC로 사용할 PC를 IP 기준으로 선택합니다."/>
             </StackPanel>
 
             <!-- 100단위 범위 체크 -->
             <StackPanel Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
-                <TextBlock Text="스캔 범위:" VerticalAlignment="Center"/>
-                <CheckBox Content="0–99" Margin="8,0" IsChecked="{Binding Range0Checked}"/>
-                <CheckBox Content="100–199" Margin="8,0" IsChecked="{Binding Range100Checked}"/>
-                <CheckBox Content="200–254" Margin="8,0" IsChecked="{Binding Range200Checked}"/>
+                <TextBlock Text="스캔 범위:" VerticalAlignment="Center"
+                           ToolTip="스캔할 IP 마지막 옥텟 범위를 선택합니다. (동일 대역 내 0~254)" />
+                <CheckBox Content="0–99" Margin="8,0" IsChecked="{Binding Range0Checked}"
+                          ToolTip="IP xxx.xxx.xxx.0 ~ xxx.xxx.xxx.99 구간을 스캔합니다."/>
+                <CheckBox Content="100–199" Margin="8,0" IsChecked="{Binding Range100Checked}"
+                          ToolTip="IP xxx.xxx.xxx.100 ~ xxx.xxx.xxx.199 구간을 스캔합니다."/>
+                <CheckBox Content="200–254" Margin="8,0" IsChecked="{Binding Range200Checked}"
+                          ToolTip="IP xxx.xxx.xxx.200 ~ xxx.xxx.xxx.254 구간을 스캔합니다."/>
             </StackPanel>
 
             <!-- Scan 버튼 -->
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="Scan" Width="100" Command="{Binding ScanCommand}" 
-                        IsEnabled="{Binding IsNotScanning}"/>
+                <Button Content="Scan"
+                        Width="100"
+                        Command="{Binding ScanCommand}" 
+                        IsEnabled="{Binding IsNotScanning}"
+                        ToolTip="선택된 IP 범위를 대상으로 PC를 스캔합니다. 이미 스캔 중일 때는 비활성화됩니다."/>
             </StackPanel>
         </DockPanel>
 
@@ -139,24 +163,81 @@
                   HeadersVisibility="Column"
                   RowHeaderWidth="0"
                   ColumnHeaderHeight="28"
-                  FontSize="13" Grid.ColumnSpan="2">
+                  FontSize="13" Grid.ColumnSpan="2"
+                  ToolTip="스캔된 PC 목록입니다. 동기화 대상 PC를 선택하고, 계정 설정을 변경할 수 있습니다.">
             <DataGrid.Columns>
-                <DataGridCheckBoxColumn Header="선택" Binding="{Binding IsSelected, Mode=TwoWay}" Width="60"/>
-                <DataGridTextColumn Header="PC 이름" Binding="{Binding Name}" Width="*"/>
-                <DataGridTextColumn Header="IP 주소" Binding="{Binding Ip}" Width="*"/>
-                <DataGridTextColumn Header="상태" Binding="{Binding Status}" Width="*"/>
-                <DataGridTextColumn Header="시간" Binding="{Binding RemoteTime}" Width="*"/>
+                <DataGridCheckBoxColumn Header="선택"
+                                        Binding="{Binding IsSelected, Mode=TwoWay}"
+                                        Width="60">
+                    <DataGridCheckBoxColumn.ElementStyle>
+                        <Style TargetType="CheckBox">
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="ToolTip" Value="이 PC를 시간 동기화 대상에 포함할지 선택합니다."/>
+                        </Style>
+                    </DataGridCheckBoxColumn.ElementStyle>
+                </DataGridCheckBoxColumn>
+
+                <DataGridTextColumn Header="PC 이름"
+                                    Binding="{Binding Name}"
+                                    Width="*">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="ToolTip" Value="PC의 호스트 이름입니다."/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Header="IP 주소"
+                                    Binding="{Binding Ip}"
+                                    Width="*">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="ToolTip" Value="해당 PC의 IP 주소입니다."/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Header="상태"
+                                    Binding="{Binding Status}"
+                                    Width="*">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="ToolTip" Value="Ping/접속 시도 결과 등 현재 상태를 나타냅니다."/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Header="시간"
+                                    Binding="{Binding RemoteTime}"
+                                    Width="*">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="ToolTip" Value="원격 PC에서 읽어온 현재 시간입니다."/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
 
                 <!-- 계정(표시) -->
-                <DataGridTextColumn Header="계정(ID)" Binding="{Binding CredentialUserDisplay}" Width="130"/>
+                <DataGridTextColumn Header="계정(ID)"
+                                    Binding="{Binding CredentialUserDisplay}"
+                                    Width="130">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="ToolTip" Value="이 PC에 설정된 계정 표시입니다. (미지정 시 기본 계정 사용 예정)"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
 
                 <!-- 계정 설정 버튼 -->
-                <DataGridTemplateColumn Header="계정 설정" Width="110">
+                <DataGridTemplateColumn Header="계정 설정"
+                                        Width="110">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Button Content="{Binding CredentialButtonText}" 
                                     Click="SetCredential_Click"
-                                    Tag="{Binding}" Width="90"/>
+                                    Tag="{Binding}" Width="90"
+                                    ToolTip="이 PC에 사용할 개별 계정(ID/Password)을 설정하거나 변경합니다."/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
@@ -164,10 +245,24 @@
         </DataGrid>
 
         <!-- 버튼 영역 -->
-        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0" Grid.ColumnSpan="2">
-            <Button Content="전체 선택" Width="100" Command="{Binding SelectAllCommand}"/>
-            <Button Content="전체 해제" Width="100" Command="{Binding DeselectAllCommand}"/>
-            <Button Content="선택된 PC 동기화" Width="160" Click="SyncWithPassword_Click"/>
+        <StackPanel Grid.Row="4"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,10,0,0"
+                    Grid.ColumnSpan="2"
+                    ToolTip="동기화 대상 PC를 일괄 선택/해제하거나, 선택된 PC들을 실제 시간 동기화하는 영역입니다.">
+            <Button Content="전체 선택"
+                    Width="100"
+                    Command="{Binding SelectAllCommand}"
+                    ToolTip="목록에 표시된 모든 PC를 동기화 대상으로 선택합니다."/>
+            <Button Content="전체 해제"
+                    Width="100"
+                    Command="{Binding DeselectAllCommand}"
+                    ToolTip="목록에 표시된 모든 PC의 동기화 선택을 해제합니다."/>
+            <Button Content="선택된 PC 동기화"
+                    Width="160"
+                    Click="SyncWithPassword_Click"
+                    ToolTip="선택된 PC들을 메인 PC 시간에 맞춰 동기화합니다. (계정 설정이 올바른지 확인 후 사용하세요.)"/>
         </StackPanel>
     </Grid>
 

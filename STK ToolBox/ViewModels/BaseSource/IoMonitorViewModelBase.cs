@@ -27,38 +27,48 @@ namespace STK_ToolBox.ViewModels
     /// </summary>
     public abstract class IoMonitorViewModelBase : BaseViewModel
     {
-        // Public Bindings 
+        #region Public Bindings (Properties & Commands)
 
+        // IO 목록 (DataGrid 바인딩용)
         public ObservableCollection<IOMonitorItem> IOList { get; private set; }
 
+        // H/W 연결 상태 텍스트
         protected bool _hwConnected;
         public string HwStatusText
         {
             get { return _hwConnected ? "H/W: Connected" : "H/W: Disconnected"; }
         }
 
+        // H/W 상태 색상
         public Brush HwStatusBrush
         {
             get { return _hwConnected ? Brushes.SeaGreen : Brushes.IndianRed; }
         }
 
+        // 상태 파일 전체 경로 표시
         public string StateFilePath
         {
             get { return _stateFile; }
         }
 
+        // 명령
         public ICommand SaveCommand { get; private set; }
         public ICommand LoadStateCommand { get; private set; }
         public ICommand ToggleOutputCommand { get; private set; }
         public ICommand OpenNoteCommand { get; private set; }
 
-        // 내부 필드
+        #endregion
 
+        #region Fields (Config / State / Cache)
+
+        // CC-Link 채널 번호
         protected readonly short _channelNo;
 
+        // 체크/메모 저장 경로
         protected readonly string _stateDir;
         protected readonly string _stateFile;
 
+        // 메모 저장 딕셔너리 (Key: GetKey())
         protected readonly Dictionary<string, string> _notes =
             new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
@@ -67,7 +77,7 @@ namespace STK_ToolBox.ViewModels
         private long _lastSavedVersion = 0;
         private DateTime _lastSaveTime = DateTime.MinValue;
 
-        /// <summary>주소 파싱 결과 캐시</summary>
+        /// <summary>주소 파싱 결과 캐시 항목</summary>
         protected class ParsedAddr
         {
             public short DevType;     // MdFunc32Wrapper.DevX / DevY
@@ -75,15 +85,18 @@ namespace STK_ToolBox.ViewModels
             public int Bit;           // 0..31
             public short BlockStart;  // 0 또는 16
             public int BitOffset;     // 0..15
+
             public bool IsOutput
             {
                 get { return DevType == MdFunc32Wrapper.DevY; }
             }
         }
 
+        // Address → 파싱 결과 캐시
         protected readonly Dictionary<IOMonitorItem, ParsedAddr> _addrCache =
             new Dictionary<IOMonitorItem, ParsedAddr>();
 
+        // Polling 타이머 및 플래그
         protected readonly DispatcherTimer _pollTimer;
         protected bool _polling;
 
@@ -92,7 +105,9 @@ namespace STK_ToolBox.ViewModels
         private bool _autoSavePending;
         private bool _suppressAutoSave;
 
-        // 생성자
+        #endregion
+
+        #region Constructor
 
         protected IoMonitorViewModelBase(short channelNo, string stateFileName)
         {
@@ -123,8 +138,11 @@ namespace STK_ToolBox.ViewModels
             _autoSaveTimer.Tick += AutoSaveTimer_Tick;
         }
 
-        // View 로드 시 보드 Open 
+        #endregion
 
+        #region Lifecycle (View Loaded)
+
+        // View 로드 시 보드 Open 
         public virtual void OnViewLoaded()
         {
             short rc = MdFunc32Wrapper.Open(_channelNo);
@@ -143,8 +161,11 @@ namespace STK_ToolBox.ViewModels
             var _ = PollVisibleItemsAsync();
         }
 
-        //  공통 팝업 
+        #endregion
 
+        #region Popup Helper
+
+        //  공통 팝업 
         protected void PostPopup(string text, string title, MessageBoxImage icon)
         {
             var d = Application.Current != null ? Application.Current.Dispatcher : null;
@@ -155,8 +176,11 @@ namespace STK_ToolBox.ViewModels
                 DispatcherPriority.Background);
         }
 
-        // 메모/노트 
+        #endregion
 
+        #region Notes / Memo
+
+        // 메모/노트 
         protected virtual void OpenNote(IOMonitorItem item)
         {
             if (item == null) return;
@@ -185,7 +209,9 @@ namespace STK_ToolBox.ViewModels
             MarkDirtyAndScheduleSave();
         }
 
-        // 출력 토글 
+        #endregion
+
+        #region Output Toggle (Y 출력 토글)
 
         protected virtual bool CanToggleOutput(IOMonitorItem item)
         {
@@ -249,7 +275,7 @@ namespace STK_ToolBox.ViewModels
             {
                 item.CurrentState = newValue;
                 // 필요하면 출력 토글도 자동 저장에 포함 가능
-                // ScheduleAutoSave();
+                // MarkDirtyAndScheduleSave();
             }
             else
             {
@@ -258,7 +284,9 @@ namespace STK_ToolBox.ViewModels
             }
         }
 
-        // 체크/메모 저장/불러오기 
+        #endregion
+
+        #region Save / Load Check & Notes
 
         // 수동 저장(버튼) → 팝업 표시
         protected virtual void SaveStates()
@@ -403,8 +431,11 @@ namespace STK_ToolBox.ViewModels
             }
         }
 
-        //  주소 캐시 구성 
+        #endregion
 
+        #region Address Cache
+
+        //  주소 캐시 구성 
         protected virtual void BuildAddressCache()
         {
             _addrCache.Clear();
@@ -433,8 +464,11 @@ namespace STK_ToolBox.ViewModels
             }
         }
 
-        //  Polling 
+        #endregion
 
+        #region Polling (CC-Link Read)
+
+        // 어떤 항목이 "현재 화면에서 보이는지"는 자식 ViewModel에서 결정
         protected abstract IEnumerable<IOMonitorItem> GetVisibleItems();
 
         protected virtual async Task PollVisibleItemsAsync()
@@ -490,7 +524,9 @@ namespace STK_ToolBox.ViewModels
             }
         }
 
-        //  자동 저장 관련 유틸 
+        #endregion
+
+        #region Auto Save (Dirty Tracking & Timer)
 
         private void IOList_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
@@ -527,7 +563,7 @@ namespace STK_ToolBox.ViewModels
             {
                 MarkDirtyAndScheduleSave();
             }
-            // HasNote 변경은 OpenNote()에서 ScheduleAutoSave 호출하므로 여기서 별도 처리 안 해도 됨
+            // HasNote 변경은 OpenNote()에서 MarkDirtyAndScheduleSave 호출하므로 여기서 별도 처리 안 함
         }
 
         private void MarkDirtyAndScheduleSave()
@@ -565,7 +601,9 @@ namespace STK_ToolBox.ViewModels
             _lastSaveTime = DateTime.Now;
         }
 
-        //  유틸 
+        #endregion
+
+        #region Utility
 
         protected static string GetKey(IOMonitorItem it)
         {
@@ -575,5 +613,7 @@ namespace STK_ToolBox.ViewModels
             string name = it.IOName ?? "";
             return "AK:" + addr + "|" + name;
         }
+
+        #endregion
     }
 }

@@ -11,11 +11,37 @@ using System.Windows.Input;
 
 namespace STK_ToolBox.ViewModels
 {
+    /// <summary>
+    /// 공용 I/O 모니터 화면 ViewModel.
+    /// - IOMonitoring 테이블을 읽어 IOList 구성
+    /// - DetailUnit 기준으로 탭 분할 (한 탭당 32개: 좌16 / 우16)
+    /// - 체크/메모/자동 저장은 IoMonitorViewModelBase 공통 로직 사용
+    /// - Spare 포함 항목을 제외하고 전체/현재 탭 Check On/Off 기능 제공
+    /// </summary>
     public class IOCheckViewModel : IoMonitorViewModelBase
     {
-        public ObservableCollection<TabPageVM> Tabs { get; private set; }
+        #region Constants & Fields
+
+        private readonly string _dbPath = @"D:\LBS_DB\LBSControl.db3";
+
+        private const short ChannelNo = 81;
 
         private TabPageVM _selectedTab;
+
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        /// DetailUnit 기준으로 구성된 탭 컬렉션.
+        /// 한 탭에는 최대 32개(I/O)가 들어가며, UI에서는 좌16/우16으로 나눠 표시.
+        /// </summary>
+        public ObservableCollection<TabPageVM> Tabs { get; private set; }
+
+        /// <summary>
+        /// 현재 선택된 탭.
+        /// 변경 시 해당 탭의 보이는 항목을 기준으로 Polling 수행.
+        /// </summary>
         public TabPageVM SelectedTab
         {
             get { return _selectedTab; }
@@ -24,22 +50,34 @@ namespace STK_ToolBox.ViewModels
                 if (_selectedTab == value) return;
                 _selectedTab = value;
                 OnPropertyChanged("SelectedTab");
+
+                // 탭 변경 시 현재 보이는 항목만 즉시 Poll
                 var _ = PollVisibleItemsAsync();
             }
         }
 
+        #endregion
+
+        #region Commands
+
         public ICommand RefreshCommand { get; private set; }
         public ICommand HelpCommand { get; private set; }
 
-        // 추가된 커맨드 4개
+        /// <summary>전체 IO Check (Spare 제외)</summary>
         public ICommand CheckAllCommand { get; private set; }
+
+        /// <summary>전체 IO Uncheck (Spare 제외)</summary>
         public ICommand UncheckAllCommand { get; private set; }
+
+        /// <summary>현재 탭 IO Check (Spare 제외)</summary>
         public ICommand CheckCurrentTabCommand { get; private set; }
+
+        /// <summary>현재 탭 IO Uncheck (Spare 제외)</summary>
         public ICommand UncheckCurrentTabCommand { get; private set; }
 
-        private readonly string _dbPath = @"D:\LBS_DB\LBSControl.db3";
+        #endregion
 
-        private const short ChannelNo = 81;
+        #region Constructor
 
         public IOCheckViewModel()
             : base(ChannelNo, "io_check_state.csv")
@@ -49,18 +87,26 @@ namespace STK_ToolBox.ViewModels
             RefreshCommand = new RelayCommand(new Action(LoadIOStatus));
             HelpCommand = new RelayCommand(new Action(ShowHelp));
 
-            // 커맨드 초기화
+            // Spare 제외 Check 관련 커맨드
             CheckAllCommand = new RelayCommand(new Action(CheckAllNotSpare));
             UncheckAllCommand = new RelayCommand(new Action(UncheckAllNotSpare));
             CheckCurrentTabCommand = new RelayCommand(new Action(CheckCurrentTabNotSpare));
             UncheckCurrentTabCommand = new RelayCommand(new Action(UncheckCurrentTabNotSpare));
 
-            // IOByteTable_X / Y 로드
+            // IOByteTable_X / Y 로드 (CC-Link 주소 범위 체크용)
             MdFunc32Wrapper.LoadIoByteTables(_dbPath);
 
             LoadIOStatus();
         }
 
+        #endregion
+
+        #region DB Load & IOList 구성
+
+        /// <summary>
+        /// IOMonitoring 테이블에서 I/O 정보를 읽어 IOList를 구성.
+        /// 이후 주소 캐시 재구성, 저장된 상태 복원, 탭 재구성까지 수행.
+        /// </summary>
         private void LoadIOStatus()
         {
             IOList.Clear();
@@ -69,15 +115,17 @@ namespace STK_ToolBox.ViewModels
             {
                 if (!File.Exists(_dbPath))
                 {
-                    PostPopup("SQLite DB 파일을 찾을 수 없습니다:\r\n" + _dbPath,
-                              "DB 연결 오류",
-                              System.Windows.MessageBoxImage.Error);
+                    PostPopup(
+                        "SQLite DB 파일을 찾을 수 없습니다:\r\n" + _dbPath,
+                        "DB 연결 오류",
+                        System.Windows.MessageBoxImage.Error);
                     return;
                 }
 
                 using (var conn = new SQLiteConnection("Data Source=" + _dbPath + ";Version=3;"))
                 {
                     conn.Open();
+
                     using (var cmd = new SQLiteCommand("SELECT * FROM IOMonitoring;", conn))
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -108,6 +156,7 @@ namespace STK_ToolBox.ViewModels
                     }
                 }
 
+                // 주소 캐시 재작성 + 저장 상태 복원 + 탭 구성 + Poll
                 BuildAddressCache();
                 LoadSavedStates(true);
                 RebuildTabsStable();
@@ -115,12 +164,16 @@ namespace STK_ToolBox.ViewModels
             }
             catch (Exception ex)
             {
-                PostPopup("로드 오류: " + ex.Message,
-                          "오류",
-                          System.Windows.MessageBoxImage.Error);
+                PostPopup(
+                    "로드 오류: " + ex.Message,
+                    "오류",
+                    System.Windows.MessageBoxImage.Error);
             }
         }
 
+        /// <summary>
+        /// 여러 컬럼 후보명 중 첫 번째로 존재하는 인덱스를 반환.
+        /// </summary>
         private static int Find(SQLiteDataReader reader, string a, params string[] others)
         {
             var names = new List<string>();
@@ -136,18 +189,32 @@ namespace STK_ToolBox.ViewModels
                 }
                 catch
                 {
+                    // ignore
                 }
             }
             return -1;
         }
 
+        /// <summary>
+        /// 지정 인덱스에서 문자열을 안전하게 읽어옴(없거나 NULL이면 빈 문자열).
+        /// </summary>
         private static string Read(SQLiteDataReader reader, int ord)
         {
             if (ord < 0 || reader.IsDBNull(ord))
-                return "";
-            return reader.GetValue(ord) + "";
+                return string.Empty;
+
+            return reader.GetValue(ord) + string.Empty;
         }
 
+        #endregion
+
+        #region 탭 구성 로직 (DetailUnit 그룹 + 32개씩 분할)
+
+        /// <summary>
+        /// DetailUnit 기준으로 그룹핑 후,
+        /// 한 그룹(DetailUnit) 내에서 32개씩 끊어서 탭(TabPageVM)을 다시 구성.
+        /// 기존 SelectedTab의 Key를 기준으로 선택 탭 유지 시도.
+        /// </summary>
         private void RebuildTabsStable()
         {
             string oldKey = (SelectedTab != null) ? SelectedTab.Key : null;
@@ -172,38 +239,53 @@ namespace STK_ToolBox.ViewModels
             foreach (string detail in groupOrder)
             {
                 List<IOMonitorItem> items = bucket[detail];
+
                 for (int page = 0; page < items.Count; page += pageSize)
                 {
                     var chunk = items.Skip(page).Take(pageSize).ToList();
                     string key = detail + "|" + (page / pageSize);
                     string title = detail;
+
                     newTabs.Add(new TabPageVM(key, title, chunk));
                 }
             }
 
             if (newTabs.Count == 0)
+            {
                 newTabs.Add(new TabPageVM("EMPTY|0", "N/A", new List<IOMonitorItem>()));
+            }
 
             Tabs.Clear();
-            foreach (var t in newTabs) Tabs.Add(t);
+            foreach (var t in newTabs)
+                Tabs.Add(t);
 
             SelectedTab = Tabs.FirstOrDefault(t => t.Key == oldKey) ?? Tabs.FirstOrDefault();
         }
+
+        #endregion
+
+        #region Help & Override
 
         private void ShowHelp()
         {
             string msg =
 "I/O 모니터 사용법\r\n\r\n" +
-"• 저장/불러오기: Checked 상태와 메모(Note)을 CSV로 저장/적용.\r\n" +
-"• 탭: DetailUnit 순서 그대로, 한 탭에 32개(좌16/우16) 표시.\r\n" +
-"• Output: Y 주소(출력)만 토글 가능.\r\n" +
+"• 저장/불러오기: Checked 상태와 메모(Note)를 CSV로 저장/적용합니다.\r\n" +
+"• 탭: DetailUnit 순서 그대로, 한 탭에 최대 32개(좌16/우16)씩 표시됩니다.\r\n" +
+"• Output: Y 주소(출력)만 토글 가능하며, CC-Link 보드와 연결되어야 합니다.\r\n" +
 "• Checked: 체크 시 행 배경이 강조됩니다.\r\n" +
-"• 메모: 각 행의 '메모' 버튼으로 메모 작성/수정/삭제.\r\n\r\n" +
-"저장 파일: " + StateFilePath;
+"• 메모: 각 행의 '메모' 버튼으로 특이사항을 기록/수정/삭제할 수 있습니다.\r\n\r\n" +
+"저장 파일 경로: " + StateFilePath;
 
-            PostPopup(msg, "도움말 — I/O Monitor", System.Windows.MessageBoxImage.Information);
+            PostPopup(
+                msg,
+                "도움말 — I/O Monitor",
+                System.Windows.MessageBoxImage.Information);
         }
 
+        /// <summary>
+        /// 현재 선택된 탭에 표시되는 항목들(좌16 + 우16)을 Polling 대상으로 반환.
+        /// </summary>
         protected override IEnumerable<IOMonitorItem> GetVisibleItems()
         {
             if (SelectedTab == null)
@@ -212,11 +294,13 @@ namespace STK_ToolBox.ViewModels
             return SelectedTab.Left16.Concat(SelectedTab.Right16);
         }
 
-        // ─────────────────────────────────────
-        //   Spare 제외 체크/해제 로직
-        //   기준: IOName 안에 "Spare" (대소문자 무시)
-        // ─────────────────────────────────────
+        #endregion
 
+        #region Spare 제외 체크/해제 유틸
+
+        /// <summary>
+        /// IOName 에 "Spare" (대소문자 무시) 가 포함되어 있으면 Spare로 간주.
+        /// </summary>
         private static bool IsSpare(IOMonitorItem item)
         {
             if (item == null) return false;
@@ -249,6 +333,9 @@ namespace STK_ToolBox.ViewModels
             SetCheckForItems(SelectedTab.Items, false);
         }
 
+        /// <summary>
+        /// 전달된 I/O 리스트에서 Spare가 아닌 항목에 대해 IsChecked 값을 일괄 변경.
+        /// </summary>
         private void SetCheckForItems(IEnumerable<IOMonitorItem> items, bool check)
         {
             if (items == null) return;
@@ -256,17 +343,46 @@ namespace STK_ToolBox.ViewModels
             foreach (var it in items)
             {
                 if (it == null) continue;
-                if (IsSpare(it)) continue;          // Spare 제외
+                if (IsSpare(it)) continue;     // Spare 제외
                 it.IsChecked = check;
             }
         }
+
+        #endregion
     }
 
+    #region TabPageVM
+
+    /// <summary>
+    /// I/O 모니터 탭 한 개를 표현하는 ViewModel.
+    /// - Key : 내부 식별(DetailUnit + 페이지 인덱스)
+    /// - Header : 탭에 표시되는 제목(DetailUnit)
+    /// - Items  : 해당 탭에 포함된 I/O 항목 리스트 (최대 32개)
+    ///   Left16 / Right16 으로 16개씩 나누어 UI에서 좌/우 그리드에 바인딩.
+    /// </summary>
     public class TabPageVM
     {
+        #region Properties
+
         public string Key { get; private set; }
         public string Header { get; private set; }
         public List<IOMonitorItem> Items { get; private set; }
+
+        /// <summary>첫 16개 항목(또는 전체가 16개 미만이면 그만큼) – 좌측 그리드.</summary>
+        public IEnumerable<IOMonitorItem> Left16
+        {
+            get { return Items.Take(16); }
+        }
+
+        /// <summary>17번째 이후 최대 16개 항목 – 우측 그리드.</summary>
+        public IEnumerable<IOMonitorItem> Right16
+        {
+            get { return Items.Skip(16).Take(16); }
+        }
+
+        #endregion
+
+        #region Constructor
 
         public TabPageVM(string key, string header, List<IOMonitorItem> items)
         {
@@ -275,14 +391,8 @@ namespace STK_ToolBox.ViewModels
             Items = items ?? new List<IOMonitorItem>();
         }
 
-        public IEnumerable<IOMonitorItem> Left16
-        {
-            get { return Items.Take(16); }
-        }
-
-        public IEnumerable<IOMonitorItem> Right16
-        {
-            get { return Items.Skip(16).Take(16); }
-        }
+        #endregion
     }
+
+    #endregion
 }

@@ -12,15 +12,25 @@
             <Setter Property="IsTabStop" Value="False"/>
             <Setter Property="Background" Value="White"/>
             <Setter Property="BorderBrush" Value="#BDBDBD"/>
+            <Setter Property="ToolTip"
+                    Value="ServoParameter.ini에서 읽어온 값입니다. 이 화면에서는 수정할 수 없습니다."/>
         </Style>
     </UserControl.Resources>
 
     <Grid Background="#F4F4F8">
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <StackPanel Margin="20" HorizontalAlignment="Center" MaxWidth="600" VerticalAlignment="Top">
+        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                      ToolTip="현재 축의 ORIGIN AXIS 값을 확인하고, 새로운 원점좌표계 값을 계산·적용할 수 있습니다.">
+            <StackPanel Margin="20"
+                        HorizontalAlignment="Center"
+                        MaxWidth="600"
+                        VerticalAlignment="Top">
 
                 <!-- 현재 Origin Axis 값 (진짜 읽기 전용) -->
-                <GroupBox Header="현재 원점좌표계 값 (읽기 전용)" Margin="0,0,0,10" FontSize="16" Padding="10">
+                <GroupBox Header="현재 원점좌표계 값 (읽기 전용)"
+                          Margin="0,0,0,10"
+                          FontSize="16"
+                          Padding="10"
+                          ToolTip="ServoParameter.ini에서 읽어온 현재 ORIGIN AXIS 값입니다. 실제 INI 수정은 아래 [원점좌표계 값 입력 및 적용] 영역에서 진행합니다.">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -32,30 +42,52 @@
                             <ColumnDefinition Width="100"/>
                         </Grid.ColumnDefinitions>
 
-                        <Label Content="원점좌표계" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"
-                               ToolTip="INI에서 읽어온 ORIGIN AXIS 값입니다. 246=하위, 247=상위"/>
-                        <StackPanel Grid.ColumnSpan="4" Orientation="Horizontal" VerticalAlignment="Center" Margin="152,0,-28,0">
+                        <Label Content="원점좌표계"
+                               Grid.Row="0"
+                               Grid.Column="0"
+                               VerticalAlignment="Center"
+                               ToolTip="INI에서 읽어온 ORIGIN AXIS 값입니다. Pr.246 = 하위, Pr.247 = 상위 바이트를 의미합니다."/>
+                        <StackPanel Grid.ColumnSpan="4"
+                                    Orientation="Horizontal"
+                                    VerticalAlignment="Center"
+                                    Margin="152,0,-28,0">
                             <StackPanel Margin="10,0,10,0" MinWidth="90">
-                                <TextBlock Text="10진수" FontSize="11" HorizontalAlignment="Center"/>
+                                <TextBlock Text="10진수"
+                                           FontSize="11"
+                                           HorizontalAlignment="Center"/>
                                 <TextBox Style="{StaticResource ReadOnlyBox}"
-                                         Text="{Binding CurrentOriginAxisDecimal, Mode=OneWay}" FontSize="14"/>
+                                         Text="{Binding CurrentOriginAxisDecimal, Mode=OneWay}"
+                                         FontSize="14"
+                                         ToolTip="현재 ORIGIN AXIS의 10진수 값입니다."/>
                             </StackPanel>
                             <StackPanel Margin="10,0,10,0" MinWidth="85">
-                                <TextBlock Text="상위 HEX (247)" FontSize="11" HorizontalAlignment="Center"/>
+                                <TextBlock Text="상위 HEX (247)"
+                                           FontSize="11"
+                                           HorizontalAlignment="Center"/>
                                 <TextBox Style="{StaticResource ReadOnlyBox}"
-                                         Text="{Binding CurrentOriginAxisHighHex, Mode=OneWay}" FontSize="14"/>
+                                         Text="{Binding CurrentOriginAxisHighHex, Mode=OneWay}"
+                                         FontSize="14"
+                                         ToolTip="ORIGIN AXIS 상위 바이트 값입니다. (Pr.247, 16진수)"/>
                             </StackPanel>
                             <StackPanel Margin="10,0,10,0" MinWidth="85">
-                                <TextBlock Text="하위 HEX (246)" FontSize="11" HorizontalAlignment="Center"/>
+                                <TextBlock Text="하위 HEX (246)"
+                                           FontSize="11"
+                                           HorizontalAlignment="Center"/>
                                 <TextBox Style="{StaticResource ReadOnlyBox}"
-                                         Text="{Binding CurrentOriginAxisLowHex, Mode=OneWay}" FontSize="14"/>
+                                         Text="{Binding CurrentOriginAxisLowHex, Mode=OneWay}"
+                                         FontSize="14"
+                                         ToolTip="ORIGIN AXIS 하위 바이트 값입니다. (Pr.246, 16진수)"/>
                             </StackPanel>
                         </StackPanel>
                     </Grid>
                 </GroupBox>
 
                 <!-- 입력/적용 그룹 -->
-                <GroupBox Header="원점좌표계 값 입력 및 적용" Margin="0,0,0,20" FontSize="16" Padding="10">
+                <GroupBox Header="원점좌표계 값 입력 및 적용"
+                          Margin="0,0,0,20"
+                          FontSize="16"
+                          Padding="10"
+                          ToolTip="적용할 ORIGIN AXIS 값을 10진수로 입력한 뒤, [적용] 버튼으로 INI에 반영합니다.">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -65,19 +97,41 @@
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
-                        <Label Content="Change Value" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" FontSize="14"
-                               ToolTip="적용할 ORIGIN AXIS 값을 10진수로 입력하세요"/>
+                        <Label Content="Change Value"
+                               Grid.Row="0"
+                               Grid.Column="0"
+                               VerticalAlignment="Center"
+                               FontSize="14"
+                               ToolTip="변경하고자 하는 ORIGIN AXIS 값을 10진수로 입력합니다. (축 좌표계 기준 값)"/>
                         <TextBox Text="{Binding ChangeAxis, UpdateSourceTrigger=PropertyChanged}"
-                                 Grid.Row="0" Grid.Column="1" Height="32" FontSize="14" Margin="70,0,70,0"/>
+                                 Grid.Row="0"
+                                 Grid.Column="1"
+                                 Height="32"
+                                 FontSize="14"
+                                 Margin="70,0,70,0"
+                                 ToolTip="새로 적용할 ORIGIN AXIS 10진수 값을 입력하세요. ViewModel에서 HEX(246/247)로 변환하여 INI에 반영합니다."/>
                     </Grid>
                 </GroupBox>
 
                 <!-- 버튼 영역 -->
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="적용" Width="140" Height="40" FontSize="15" Command="{Binding ApplyCommand}"/>
-                    <Button Content="초기화" Width="160" Height="40" FontSize="15"
-                            Margin="10,0,10,0" Background="#FF8A65" Foreground="White"
-                            Command="{Binding ZeroParamsCommand}"/>
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            ToolTip="입력한 ORIGIN AXIS 값을 적용하거나, 관련 파라미터를 0으로 초기화할 수 있습니다.">
+                    <Button Content="적용"
+                            Width="140"
+                            Height="40"
+                            FontSize="15"
+                            Command="{Binding ApplyCommand}"
+                            ToolTip="입력한 ORIGIN AXIS 값을 기반으로 Pr.246/247을 계산하여 ServoParameter.ini에 적용합니다. 적용 전 백업을 권장합니다."/>
+                    <Button Content="초기화"
+                            Width="160"
+                            Height="40"
+                            FontSize="15"
+                            Margin="10,0,10,0"
+                            Background="#FF8A65"
+                            Foreground="White"
+                            Command="{Binding ZeroParamsCommand}"
+                            ToolTip="현재 축의 ORIGIN AXIS 관련 파라미터(Pr.246, 247)를 0으로 초기화합니다. (주의: 실제 장비 원점 좌표에 영향을 줍니다.)"/>
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>

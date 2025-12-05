@@ -10,9 +10,27 @@ using System.Windows.Input;
 
 namespace STK_ToolBox.ViewModels
 {
+    /// <summary>
+    /// 인버터 모니터 ViewModel
+    /// - LBS_Conv 테이블을 기반으로 인버터용 I/O 리스트 구성
+    /// - CC-Link Y 출력 토글(개별/일괄)
+    /// - 체크/메모/자동 저장 기능은 IoMonitorViewModelBase 공통 로직 사용
+    /// </summary>
     public class InverterViewModel : IoMonitorViewModelBase
     {
+        #region Fields
+
         private readonly string _dbPath = @"D:\LBS_DB\LBSControl.db3";
+
+        // 버튼 상태 표시용 플래그 (ON/OFF 텍스트 결정)
+        private bool _allForwardHighOn;
+        private bool _allReverseHighOn;
+        private bool _allForwardLowOn;
+        private bool _allReverseLowOn;
+
+        #endregion
+
+        #region Commands
 
         public ICommand RefreshCommand { get; private set; }
         public ICommand HelpCommand { get; private set; }
@@ -23,8 +41,10 @@ namespace STK_ToolBox.ViewModels
         public ICommand AllForwardLowToggleCommand { get; private set; }
         public ICommand AllReverseLowToggleCommand { get; private set; }
 
-        // 버튼 상태 표시용 플래그 (ON/OFF 텍스트 결정)
-        private bool _allForwardHighOn;
+        #endregion
+
+        #region Properties (All-Group Button States)
+
         public bool AllForwardHighOn
         {
             get { return _allForwardHighOn; }
@@ -38,7 +58,6 @@ namespace STK_ToolBox.ViewModels
             }
         }
 
-        private bool _allReverseHighOn;
         public bool AllReverseHighOn
         {
             get { return _allReverseHighOn; }
@@ -52,7 +71,6 @@ namespace STK_ToolBox.ViewModels
             }
         }
 
-        private bool _allForwardLowOn;
         public bool AllForwardLowOn
         {
             get { return _allForwardLowOn; }
@@ -66,7 +84,6 @@ namespace STK_ToolBox.ViewModels
             }
         }
 
-        private bool _allReverseLowOn;
         public bool AllReverseLowOn
         {
             get { return _allReverseLowOn; }
@@ -80,12 +97,17 @@ namespace STK_ToolBox.ViewModels
             }
         }
 
+        #endregion
+
+        #region Constructor
+
         public InverterViewModel()
             : base(81, "inverter_state.csv")
         {
             // IOByteTable_X/Y 정보 로드 (블록 범위 체크에 사용)
             MdFunc32Wrapper.LoadIoByteTables(_dbPath);
 
+            // 단일 동작
             RefreshCommand = new RelayCommand(new Action(LoadInverterList));
             HelpCommand = new RelayCommand(new Action(ShowHelp));
 
@@ -95,8 +117,13 @@ namespace STK_ToolBox.ViewModels
             AllForwardLowToggleCommand = new RelayCommand(new Action(ToggleAllForwardLow));
             AllReverseLowToggleCommand = new RelayCommand(new Action(ToggleAllReverseLow));
 
+            // 초기 로드
             LoadInverterList();
         }
+
+        #endregion
+
+        #region Overrides (IoMonitorViewModelBase)
 
         /// <summary>
         /// 인버터 화면은 전체 IOList를 모니터링
@@ -106,15 +133,36 @@ namespace STK_ToolBox.ViewModels
             return IOList;
         }
 
+        /// <summary>
+        /// 인버터에서는 정방향(bit 0), 역방향(bit 1), 고속(bit 3), 저속(bit 4) 모두 토글 가능
+        /// </summary>
+        protected override bool CanToggleOutput(IOMonitorItem item)
+        {
+            if (!base.CanToggleOutput(item))
+                return false;
+
+            ParsedAddr p;
+            if (!_addrCache.TryGetValue(item, out p))
+                return false;
+
+            // Y 출력이면서 bit 0~4 모두 허용
+            return p.IsOutput && (p.Bit >= 0 && p.Bit <= 4);
+        }
+
+        #endregion
+
+        #region DB Load & IOMonitorItem 생성
+
         private void LoadInverterList()
         {
             IOList.Clear();
 
             if (!File.Exists(_dbPath))
             {
-                PostPopup("SQLite DB 파일을 찾을 수 없습니다:\r\n" + _dbPath,
-                          "DB 오류",
-                          System.Windows.MessageBoxImage.Error);
+                PostPopup(
+                    "SQLite DB 파일을 찾을 수 없습니다:\r\n" + _dbPath,
+                    "DB 오류",
+                    System.Windows.MessageBoxImage.Error);
                 return;
             }
 
@@ -163,6 +211,7 @@ namespace STK_ToolBox.ViewModels
                     }
                 }
 
+                // 주소 캐시 + 상태 복원 + 첫 Poll
                 BuildAddressCache();
                 LoadSavedStates(true);
                 var _ = PollVisibleItemsAsync();
@@ -175,9 +224,10 @@ namespace STK_ToolBox.ViewModels
             }
             catch (Exception ex)
             {
-                PostPopup("로드 오류: " + ex.Message,
-                          "오류",
-                          System.Windows.MessageBoxImage.Error);
+                PostPopup(
+                    "로드 오류: " + ex.Message,
+                    "오류",
+                    System.Windows.MessageBoxImage.Error);
             }
         }
 
@@ -193,9 +243,9 @@ namespace STK_ToolBox.ViewModels
             return new IOMonitorItem
             {
                 Id = 0,
-                Unit = unitLabel,          // CONV + 방향 + 스테이션 예) CONV1 (IN, ST#31)
-                IOName = mode,               // 정방향 / 역방향 / 저속 / 고속
-                Address = addr,               // Y0000 형식
+                Unit = unitLabel,           // 예) CONV1 (IN, ST#31)
+                IOName = mode,              // 정방향 / 역방향 / 저속 / 고속
+                Address = addr,             // Y0000 형식
                 DetailUnit = "Inverter",
                 Description = mode + " 출력",
                 CurrentState = false
@@ -217,23 +267,9 @@ namespace STK_ToolBox.ViewModels
             return "";
         }
 
-        /// <summary>
-        /// 인버터에서는 정방향(bit 0), 역방향(bit 1), 고속(bit 3), 저속(bit 4) 모두 토글 가능
-        /// </summary>
-        protected override bool CanToggleOutput(IOMonitorItem item)
-        {
-            if (!base.CanToggleOutput(item))
-                return false;
+        #endregion
 
-            ParsedAddr p;
-            if (!_addrCache.TryGetValue(item, out p))
-                return false;
-
-            // Y 출력이면서 bit 0~4 모두 허용
-            return p.IsOutput && (p.Bit >= 0 && p.Bit <= 4);
-        }
-
-        // ── 일괄 제어 로직 ─────────────────────────────────────────
+        #region 일괄 제어 로직
 
         private void ToggleAllForwardHigh()
         {
@@ -332,6 +368,10 @@ namespace STK_ToolBox.ViewModels
             }
         }
 
+        #endregion
+
+        #region Help
+
         private void ShowHelp()
         {
             string msg =
@@ -351,7 +391,12 @@ namespace STK_ToolBox.ViewModels
 "• 체크/메모 기능은 IO 모니터와 동일하게 동작합니다.\r\n\r\n" +
 "저장 파일: " + StateFilePath;
 
-            PostPopup(msg, "도움말 — Inverter Monitor", System.Windows.MessageBoxImage.Information);
+            PostPopup(
+                msg,
+                "도움말 — Inverter Monitor",
+                System.Windows.MessageBoxImage.Information);
         }
+
+        #endregion
     }
 }
