@@ -7,6 +7,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Input;
 using WinForms = System.Windows.Forms;
+using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace STK_ToolBox.ViewModels
 {
@@ -182,7 +183,7 @@ namespace STK_ToolBox.ViewModels
                 var dlg = new OpenFileDialog
                 {
                     Title = "TACT 로그 파일 선택",
-                    Filter = "텍스트 로그 (*.txt)|*.txt|모든 파일 (*.*)|*.*",
+                    Filter = "모든 파일 (*.*)|*.*|텍스트 로그 (*.txt)|*.txt",
                     InitialDirectory =
                         Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)
                 };
@@ -232,34 +233,37 @@ namespace STK_ToolBox.ViewModels
         {
             try
             {
-                using (var dlg = new WinForms.FolderBrowserDialog())
+                var dlg = new CommonOpenFileDialog()
                 {
-                    dlg.Description = "TACT 요약 파일과 Tact Log를 저장할 폴더를 선택하세요.";
-                    dlg.ShowNewFolderButton = true;
+                    Title = "TACT 요약 파일과 Tact Log를 저장할 폴더를 선택하세요.",
+                    IsFolderPicker = true,
+                    AllowNonFileSystemItems = false,
+                    EnsurePathExists = true,
+                    EnsureValidNames = true
+                };
 
-                    // 초기 선택 경로 설정
-                    if (!string.IsNullOrEmpty(OutputDirectory) && Directory.Exists(OutputDirectory))
-                    {
-                        dlg.SelectedPath = OutputDirectory;
-                    }
-                    else if (!string.IsNullOrEmpty(_selectedLogPath))
-                    {
-                        var dir = Path.GetDirectoryName(_selectedLogPath);
-                        if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
-                            dlg.SelectedPath = dir;
-                    }
+                // 초기 디렉터리 설정
+                if (!string.IsNullOrEmpty(OutputDirectory) && Directory.Exists(OutputDirectory))
+                {
+                    dlg.InitialDirectory = OutputDirectory;
+                }
+                else if (!string.IsNullOrEmpty(_selectedLogPath))
+                {
+                    var dir = Path.GetDirectoryName(_selectedLogPath);
+                    if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+                        dlg.InitialDirectory = dir;
+                }
 
-                    if (dlg.ShowDialog() == WinForms.DialogResult.OK)
-                    {
-                        OutputDirectory = dlg.SelectedPath;
-                        StatusText = string.Format("저장 폴더 선택: {0}", OutputDirectory);
-                    }
+                if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
+                {
+                    OutputDirectory = dlg.FileName;
+                    StatusText = $"저장 폴더 선택: {OutputDirectory}";
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    string.Format("폴더 선택 오류: {0}", ex.Message),
+                    $"폴더 선택 오류: {ex.Message}",
                     "Tact Analyzer",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);

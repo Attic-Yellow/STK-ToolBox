@@ -7,14 +7,35 @@ using System.Runtime.CompilerServices;
 using System.IO;
 using System.Windows.Input;
 using Microsoft.Win32;
+using STK_ToolBox.Helpers; // RelayCommand
 
 namespace STK_ToolBox.ViewModels
 {
+    /// <summary>
+    /// ServoParameter.ini용 파라미터 편집 페이지 VM
+    /// - INI 경로/축 개수/선택 축 관리
+    /// - Limit / Origin 서브 ViewModel 동기화
+    /// - INI 백업/백업 폴더 열기 기능
+    /// </summary>
     public class ParameterPageViewModel : INotifyPropertyChanged
     {
+        #region ──────────────── 필드 (Fields) ────────────────
+
         private bool _syncing;
 
         private string _iniPath = @"D:\LBS_DB\ServoParameter.ini";
+        private int _axisCount = 4;
+        private string _selectedAxis = "AXIS_1";
+
+        private string _backupDirectory;
+        private int _maxBackupFiles = 20; // 0 = 무제한
+
+        #endregion
+
+
+        #region ──────────────── INI / 축 설정 바인딩 (Ini / Axis Bindings) ────────────────
+
+        /// <summary>ServoParameter.ini 파일 경로</summary>
         public string IniPath
         {
             get => _iniPath;
@@ -23,12 +44,14 @@ namespace STK_ToolBox.ViewModels
                 if (_iniPath == value) return;
                 _iniPath = value;
                 OnPropertyChanged();
+
+                // 자식 VM에 경로 전달
                 LimitVM.IniPath = value;
                 OriginVM.IniPath = value;
             }
         }
 
-        private int _axisCount = 4;
+        /// <summary>축 개수 (AXIS_1 ~ AXIS_n)</summary>
         public int AxisCount
         {
             get => _axisCount;
@@ -37,13 +60,16 @@ namespace STK_ToolBox.ViewModels
                 if (_axisCount == value) return;
                 _axisCount = value;
                 OnPropertyChanged();
+
                 BuildAxisList(value);
+
+                // 자식 VM에 축 개수 전달
                 LimitVM.AxisCount = value;
                 OriginVM.AxisCount = value;
             }
         }
 
-        private string _selectedAxis = "AXIS_1";
+        /// <summary>현재 선택된 축 이름 (예: AXIS_1)</summary>
         public string SelectedAxis
         {
             get => _selectedAxis;
@@ -52,18 +78,30 @@ namespace STK_ToolBox.ViewModels
                 if (_selectedAxis == value) return;
                 _selectedAxis = value;
                 OnPropertyChanged();
+
+                // 자식 VM에 선택 축 전달
                 LimitVM.SelectedAxis = value;
                 OriginVM.SelectedAxis = value;
             }
         }
 
+        /// <summary>콤보박스에 바인딩되는 축 목록</summary>
         public ObservableCollection<string> AxisList { get; } = new ObservableCollection<string>();
+
+        #endregion
+
+
+        #region ──────────────── 서브 ViewModel (Child ViewModels) ────────────────
 
         public LimitCalculatorViewModel LimitVM { get; } = new LimitCalculatorViewModel();
         public OriginAxisViewModel OriginVM { get; } = new OriginAxisViewModel();
 
-        // ===== 백업 설정 =====
-        private string _backupDirectory;
+        #endregion
+
+
+        #region ──────────────── 백업 설정 (Backup Settings) ────────────────
+
+        /// <summary>백업 폴더 (미지정 시 INI 폴더 하위 Backup 사용)</summary>
         public string BackupDirectory
         {
             get
@@ -80,25 +118,44 @@ namespace STK_ToolBox.ViewModels
                 }
                 return _backupDirectory;
             }
-            set { _backupDirectory = value; OnPropertyChanged(); }
+            set
+            {
+                _backupDirectory = value;
+                OnPropertyChanged();
+            }
         }
 
-        private int _maxBackupFiles = 20; // 0 = 무제한
+        /// <summary>축적할 최대 백업 개수 (0 = 무제한)</summary>
         public int MaxBackupFiles
         {
             get => _maxBackupFiles;
-            set { _maxBackupFiles = Math.Max(0, value); OnPropertyChanged(); }
+            set
+            {
+                _maxBackupFiles = Math.Max(0, value);
+                OnPropertyChanged();
+            }
         }
 
-        // ===== 커맨드 =====
+        #endregion
+
+
+        #region ──────────────── 커맨드 (Commands) ────────────────
+
         public ICommand BrowseCommand { get; }
         public ICommand BackupCommand { get; }
         public ICommand OpenBackupFolderCommand { get; }
 
+        #endregion
+
+
+        #region ──────────────── 생성자 (Constructor) ────────────────
+
         public ParameterPageViewModel()
         {
+            // 축 리스트 초기화
             BuildAxisList(AxisCount);
 
+            // 자식 VM 초기 설정
             LimitVM.IniPath = IniPath;
             LimitVM.AxisCount = AxisCount;
             LimitVM.SelectedAxis = SelectedAxis;
@@ -107,13 +164,20 @@ namespace STK_ToolBox.ViewModels
             OriginVM.AxisCount = AxisCount;
             OriginVM.SelectedAxis = SelectedAxis;
 
+            // 자식 VM 변경사항 동기화
             LimitVM.PropertyChanged += ChildVM_PropertyChanged;
             OriginVM.PropertyChanged += ChildVM_PropertyChanged;
 
+            // 커맨드 초기화
             BrowseCommand = new RelayCommand(() => OpenBrowseDialog());
             BackupCommand = new RelayCommand(() => BackupIniFile());
             OpenBackupFolderCommand = new RelayCommand(() => OpenBackupFolder());
         }
+
+        #endregion
+
+
+        #region ──────────────── INI 파일 선택 다이얼로그 (Browse) ────────────────
 
         private void OpenBrowseDialog()
         {
@@ -122,6 +186,7 @@ namespace STK_ToolBox.ViewModels
                 Filter = "INI 파일 (*.ini)|*.ini|모든 파일 (*.*)|*.*",
                 InitialDirectory = GuessInitialDirectory()
             };
+
             if (dlg.ShowDialog() == true)
             {
                 IniPath = dlg.FileName;
@@ -140,22 +205,36 @@ namespace STK_ToolBox.ViewModels
                 }
             }
             catch { }
+
             return @"D:\";
         }
+
+        #endregion
+
+
+        #region ──────────────── 축 목록 구성 (AxisList) ────────────────
 
         private void BuildAxisList(int count)
         {
             AxisList.Clear();
             for (int i = 1; i <= count; i++)
                 AxisList.Add("AXIS_" + i);
+
+            // 현재 선택 축이 리스트에 없으면 첫 번째 축으로 보정
             if (AxisList.Count > 0 && !AxisList.Contains(SelectedAxis))
                 SelectedAxis = AxisList[0];
         }
+
+        #endregion
+
+
+        #region ──────────────── 자식 VM 변경 동기화 (Child VM Sync) ────────────────
 
         private void ChildVM_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (_syncing) return;
             _syncing = true;
+
             try
             {
                 var lvm = sender as LimitCalculatorViewModel;
@@ -168,9 +247,11 @@ namespace STK_ToolBox.ViewModels
                         case nameof(LimitCalculatorViewModel.IniPath):
                             if (IniPath != lvm.IniPath) IniPath = lvm.IniPath;
                             break;
+
                         case nameof(LimitCalculatorViewModel.AxisCount):
                             if (AxisCount != lvm.AxisCount) AxisCount = lvm.AxisCount;
                             break;
+
                         case nameof(LimitCalculatorViewModel.SelectedAxis):
                             if (SelectedAxis != lvm.SelectedAxis) SelectedAxis = lvm.SelectedAxis;
                             break;
@@ -183,9 +264,11 @@ namespace STK_ToolBox.ViewModels
                         case nameof(OriginAxisViewModel.IniPath):
                             if (IniPath != ovm.IniPath) IniPath = ovm.IniPath;
                             break;
+
                         case nameof(OriginAxisViewModel.AxisCount):
                             if (AxisCount != ovm.AxisCount) AxisCount = ovm.AxisCount;
                             break;
+
                         case nameof(OriginAxisViewModel.SelectedAxis):
                             if (SelectedAxis != ovm.SelectedAxis) SelectedAxis = ovm.SelectedAxis;
                             break;
@@ -198,7 +281,11 @@ namespace STK_ToolBox.ViewModels
             }
         }
 
-        // ===== 백업 =====
+        #endregion
+
+
+        #region ──────────────── INI 백업 (Backup) ────────────────
+
         private void BackupIniFile()
         {
             try
@@ -215,6 +302,7 @@ namespace STK_ToolBox.ViewModels
                     System.Windows.MessageBox.Show("백업 폴더를 결정할 수 없습니다.");
                     return;
                 }
+
                 Directory.CreateDirectory(backupDir);
 
                 var srcNameNoExt = Path.GetFileNameWithoutExtension(IniPath);
@@ -248,6 +336,7 @@ namespace STK_ToolBox.ViewModels
             try
             {
                 var patternPrefix = srcNameNoExt + "_";
+
                 var files = new DirectoryInfo(backupDir)
                     .GetFiles("*.ini", SearchOption.TopDirectoryOnly)
                     .Where(f => f.Name.StartsWith(patternPrefix, StringComparison.OrdinalIgnoreCase))
@@ -274,7 +363,9 @@ namespace STK_ToolBox.ViewModels
                     System.Windows.MessageBox.Show("백업 폴더를 결정할 수 없습니다.");
                     return;
                 }
+
                 Directory.CreateDirectory(backupDir);
+
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                 {
                     FileName = backupDir,
@@ -287,8 +378,16 @@ namespace STK_ToolBox.ViewModels
             }
         }
 
+        #endregion
+
+
+        #region ──────────────── INotifyPropertyChanged ────────────────
+
         public event PropertyChangedEventHandler PropertyChanged;
-        private void OnPropertyChanged([CallerMemberName] string name = "") =>
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
+        private void OnPropertyChanged([CallerMemberName] string name = "")
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
+        #endregion
     }
 }

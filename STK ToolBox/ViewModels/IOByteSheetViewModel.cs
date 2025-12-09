@@ -1,4 +1,5 @@
-﻿using STK_ToolBox.Helpers;
+﻿using Microsoft.WindowsAPICodePack.Dialogs;
+using STK_ToolBox.Helpers;
 using STK_ToolBox.Models;
 using System;
 using System.Collections.Generic;
@@ -270,13 +271,37 @@ namespace STK_ToolBox.ViewModels
         /// </summary>
         private void BrowseFolder()
         {
-            using (var dialog = new WinForms.FolderBrowserDialog())
+            try
             {
-                dialog.SelectedPath = OutputFolder;
-                dialog.Description = "IO Byte Sheet 파일을 저장할 폴더를 선택하세요.";
+                var dialog = new CommonOpenFileDialog
+                {
+                    Title = "IO Byte Sheet 파일을 저장할 폴더를 선택하세요.",
+                    IsFolderPicker = true,
+                    EnsurePathExists = true,
+                    EnsureValidNames = true,
+                    AllowNonFileSystemItems = false,
+                    Multiselect = false
+                };
 
-                if (dialog.ShowDialog() == WinForms.DialogResult.OK)
-                    OutputFolder = dialog.SelectedPath;
+                // 초기 경로 지정
+                if (!string.IsNullOrWhiteSpace(OutputFolder) && Directory.Exists(OutputFolder))
+                {
+                    dialog.InitialDirectory = OutputFolder;
+                }
+
+                // 사용자 선택
+                if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
+                {
+                    OutputFolder = dialog.FileName;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"폴더 선택 오류: {ex.Message}",
+                    "IO Byte Sheet",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
         }
 

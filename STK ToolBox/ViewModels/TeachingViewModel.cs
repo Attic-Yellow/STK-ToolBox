@@ -1,16 +1,17 @@
-﻿using System;
+﻿using Microsoft.WindowsAPICodePack.Dialogs;
+using Newtonsoft.Json;
+using STK_ToolBox.Helpers;
+using STK_ToolBox.Models;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
-using STK_ToolBox.Helpers;
-using STK_ToolBox.Models;
 using MessageBox = System.Windows.MessageBox;
-using System.IO;
-using Newtonsoft.Json;
 
 namespace STK_ToolBox.ViewModels
 {
@@ -294,17 +295,32 @@ namespace STK_ToolBox.ViewModels
         #region === Commands: Save Excel ===
         public ICommand BrowsePathCommand => new RelayCommand(() =>
         {
-            var openFileDialog = new Microsoft.Win32.OpenFileDialog
+            try
             {
-                Filter = "폴더 선택|*.none", // 확장자 무효화해서 폴더만 선택하는 꼼수
-                CheckFileExists = false,
-                FileName = "폴더 선택"
-            };
+                var dlg = new CommonOpenFileDialog
+                {
+                    Title = "폴더 선택",
+                    IsFolderPicker = true,
+                    EnsurePathExists = true,
+                    EnsureValidNames = true,
+                    AllowNonFileSystemItems = false,
+                    Multiselect = false
+                };
 
-            if (openFileDialog.ShowDialog() == true)
+                // 기존 경로가 있으면 초기 디렉터리 설정
+                if (!string.IsNullOrEmpty(SavePath) && Directory.Exists(SavePath))
+                {
+                    dlg.InitialDirectory = SavePath;
+                }
+
+                if (dlg.ShowDialog() == CommonFileDialogResult.Ok)
+                {
+                    SavePath = dlg.FileName;   // 폴더 경로 그대로 반환됨
+                }
+            }
+            catch (Exception ex)
             {
-                // 사용자가 선택한 파일의 폴더 경로를 가져옴
-                SavePath = System.IO.Path.GetDirectoryName(openFileDialog.FileName);
+                MessageBox.Show($"폴더 선택 오류: {ex.Message}");
             }
         });
 

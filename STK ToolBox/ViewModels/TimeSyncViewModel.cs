@@ -16,6 +16,8 @@ namespace STK_ToolBox.ViewModels
 {
     public class PcInfo : INotifyPropertyChanged
     {
+        #region ──────────────── 바인딩 속성 (Bindable Properties) ────────────────
+
         private bool _isSelected;
         public bool IsSelected
         {
@@ -38,7 +40,12 @@ namespace STK_ToolBox.ViewModels
         public bool HasCredential
         {
             get => _hasCredential;
-            set { _hasCredential = value; OnPropertyChanged(); OnPropertyChanged(nameof(CredentialButtonText)); }
+            set
+            {
+                _hasCredential = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(CredentialButtonText));
+            }
         }
 
         private string _credentialUserDisplay;
@@ -50,16 +57,31 @@ namespace STK_ToolBox.ViewModels
 
         public string CredentialButtonText => HasCredential ? "변경" : "설정";
 
+        #endregion
+
+
+        #region ──────────────── INotifyPropertyChanged ────────────────
+
         public event PropertyChangedEventHandler PropertyChanged;
+
         protected void OnPropertyChanged([CallerMemberName] string propName = "")
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
+
+        #endregion
     }
 
     public class TimeSyncViewModel : INotifyPropertyChanged
     {
+        #region ──────────────── 전역 계정 설정 (Global Admin Account) ────────────────
+
         // 전역 기본 계정(개별 계정 없을 때 사용)
         public string AdminId { get; set; }
         public string AdminPassword { get; set; }
+
+        #endregion
+
+
+        #region ──────────────── IP 범위 선택 (Range Checkboxes) ────────────────
 
         // 범위 체크 (100단위)
         private bool _range0Checked = true;   // 0-99
@@ -83,22 +105,36 @@ namespace STK_ToolBox.ViewModels
             set { _range200Checked = value; OnPropertyChanged(); }
         }
 
-        // 스캔 상태
+        #endregion
+
+
+        #region ──────────────── 스캔 상태/진행률 (Scan State / Progress) ────────────────
+
         private bool _isScanning;
         public bool IsScanning
         {
             get => _isScanning;
-            private set { _isScanning = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsNotScanning)); }
+            private set
+            {
+                _isScanning = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(IsNotScanning));
+            }
         }
+
         public bool IsNotScanning => !IsScanning;
 
-        // 진행률
         private int _scanProgress;
         public int ScanProgress
         {
             get => _scanProgress;
             set { _scanProgress = value; OnPropertyChanged(); }
         }
+
+        #endregion
+
+
+        #region ──────────────── PC 목록 / 선택 (PC List / Selection) ────────────────
 
         public ObservableCollection<PcInfo> PcList { get; set; } = new ObservableCollection<PcInfo>();
 
@@ -116,10 +152,20 @@ namespace STK_ToolBox.ViewModels
             set { _selectedTargets = value; OnPropertyChanged(); }
         }
 
+        #endregion
+
+
+        #region ──────────────── 커맨드 (Commands) ────────────────
+
         public ICommand SelectAllCommand { get; }
         public ICommand DeselectAllCommand { get; }
         public ICommand ScanCommand { get; }
         public ICommand SyncCommand { get; }
+
+        #endregion
+
+
+        #region ──────────────── 상수 / 자격증명 저장소 (Constants / Credential Store) ────────────────
 
         // 설정 가능한 서브넷(필요시 변경)
         private const string SubnetPrefix = "192.168.10.";
@@ -127,31 +173,50 @@ namespace STK_ToolBox.ViewModels
         // 자격증명 저장소
         private readonly CredentialStore _credentialStore = new CredentialStore();
 
+        #endregion
+
+
+        #region ──────────────── 생성자 (Constructor) ────────────────
+
         public TimeSyncViewModel()
         {
-            // 동기화 커맨드(메인PC 선택 여부에 따라)
+            // 동기화 커맨드 (메인 PC 선택 여부에 따라)
             SyncCommand = new RelayCommand(SyncTimeSelected, () => SelectedPc != null);
 
-            SelectAllCommand = new RelayCommand(() =>
-            {
-                foreach (var pc in PcList) pc.IsSelected = true;
-            }, () => PcList.Any());
+            SelectAllCommand = new RelayCommand(
+                () =>
+                {
+                    foreach (var pc in PcList) pc.IsSelected = true;
+                },
+                () => PcList.Any()
+            );
 
-            DeselectAllCommand = new RelayCommand(() =>
-            {
-                foreach (var pc in PcList) pc.IsSelected = false;
-            }, () => PcList.Any());
+            DeselectAllCommand = new RelayCommand(
+                () =>
+                {
+                    foreach (var pc in PcList) pc.IsSelected = false;
+                },
+                () => PcList.Any()
+            );
 
             // Scan 버튼을 눌렀을 때만 스캔
             ScanCommand = new RelayCommand(async () => await ScanSelectedRangesAsync(), () => IsNotScanning);
 
             // 로컬 PC 먼저(선택 사항)
             AddLocalPc();
+
             // 저장소 로드
             _credentialStore.Load();
+
             // 로컬 PC에 자격 플래그 반영
-            foreach (var pc in PcList) RefreshCredentialIndicators(pc.Ip);
+            foreach (var pc in PcList)
+                RefreshCredentialIndicators(pc.Ip);
         }
+
+        #endregion
+
+
+        #region ──────────────── 자격증명 관련 (Credential Management) ────────────────
 
         public void SetCredentialForIp(string ip, string user, string password)
         {
@@ -169,6 +234,42 @@ namespace STK_ToolBox.ViewModels
                 found.CredentialUserDisplay = cred != null ? cred.UserName : "미설정";
             }
         }
+
+        private ConnectionOptions GetConnectionOptionsForIp(string ip)
+        {
+            // 1) IP별 저장 자격증명
+            var cred = _credentialStore.Get(ip);
+            if (cred != null)
+            {
+                return new ConnectionOptions
+                {
+                    Username = cred.UserName,
+                    Password = cred.GetPasswordPlain(),
+                    EnablePrivileges = true,
+                    Impersonation = ImpersonationLevel.Impersonate
+                };
+            }
+
+            // 2) 전역 기본 계정(설정되어 있으면)
+            if (!string.IsNullOrWhiteSpace(AdminId))
+            {
+                return new ConnectionOptions
+                {
+                    Username = AdminId,
+                    Password = AdminPassword ?? "",
+                    EnablePrivileges = true,
+                    Impersonation = ImpersonationLevel.Impersonate
+                };
+            }
+
+            // 자격 없음 -> null (WMI 연결 시도하지 않음)
+            return null;
+        }
+
+        #endregion
+
+
+        #region ──────────────── 로컬 PC 추가 (Local PC Detection) ────────────────
 
         private void AddLocalPc()
         {
@@ -207,14 +308,26 @@ namespace STK_ToolBox.ViewModels
             }
         }
 
+        #endregion
+
+
+        #region ──────────────── 스캔 범위 계산 (Range Calculation) ────────────────
+
         private Tuple<int, int>[] GetSelectedRanges()
         {
             var ranges = new System.Collections.Generic.List<Tuple<int, int>>();
+
             if (Range0Checked) ranges.Add(Tuple.Create(1, 99));      // 1~99
             if (Range100Checked) ranges.Add(Tuple.Create(100, 199));
-            if (Range200Checked) ranges.Add(Tuple.Create(200, 254)); // 255 제외
+            if (Range200Checked) ranges.Add(Tuple.Create(200, 254));   // 255 제외
+
             return ranges.ToArray();
         }
+
+        #endregion
+
+
+        #region ──────────────── 스캔 로직 (Scan Logic) ────────────────
 
         private async Task ScanSelectedRangesAsync()
         {
@@ -246,7 +359,9 @@ namespace STK_ToolBox.ViewModels
                 for (int i = r.Item1; i <= r.Item2; i++)
                 {
                     string ip = SubnetPrefix + i;
+
                     await throttler.WaitAsync();
+
                     tasks.Add(Task.Run(async () =>
                     {
                         try
@@ -300,6 +415,7 @@ namespace STK_ToolBox.ViewModels
                                             RemoteTime = time
                                         };
                                         PcList.Add(item);
+
                                         // 자격 플래그 반영
                                         RefreshCredentialIndicators(ip);
                                     });
@@ -325,36 +441,10 @@ namespace STK_ToolBox.ViewModels
             IsScanning = false;
         }
 
-        private ConnectionOptions GetConnectionOptionsForIp(string ip)
-        {
-            // 1) IP별 저장 자격증명
-            var cred = _credentialStore.Get(ip);
-            if (cred != null)
-            {
-                return new ConnectionOptions
-                {
-                    Username = cred.UserName,
-                    Password = cred.GetPasswordPlain(),
-                    EnablePrivileges = true,
-                    Impersonation = ImpersonationLevel.Impersonate
-                };
-            }
+        #endregion
 
-            // 2) 전역 기본 계정(설정되어 있으면)
-            if (!string.IsNullOrWhiteSpace(AdminId))
-            {
-                return new ConnectionOptions
-                {
-                    Username = AdminId,
-                    Password = AdminPassword ?? "",
-                    EnablePrivileges = true,
-                    Impersonation = ImpersonationLevel.Impersonate
-                };
-            }
 
-            // 자격 없음 -> null (WMI 연결 시도하지 않음)
-            return null;
-        }
+        #region ──────────────── 시간 동기화 (Time Sync) ────────────────
 
         public void SyncTimeSelected()
         {
@@ -411,27 +501,42 @@ namespace STK_ToolBox.ViewModels
             }
         }
 
+        #endregion
+
+
+        #region ──────────────── INotifyPropertyChanged ────────────────
+
         public event PropertyChangedEventHandler PropertyChanged;
+
         protected void OnPropertyChanged([CallerMemberName] string propName = "")
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
+
+        #endregion
     }
 
-    // RelayCommand (매개변수 없는 간단형)
+    #region ──────────────── RelayCommand (매개변수 없는 간단형) ────────────────
+
+    // 매개변수 없는 간단형 RelayCommand
     public class RelayCommand : ICommand
     {
         private readonly Action _execute;
         private readonly Func<bool> _canExecute;
+
         public RelayCommand(Action execute, Func<bool> canExecute = null)
         {
             _execute = execute ?? throw new ArgumentNullException(nameof(execute));
             _canExecute = canExecute;
         }
+
         public bool CanExecute(object parameter) => _canExecute == null || _canExecute();
         public void Execute(object parameter) => _execute();
+
         public event EventHandler CanExecuteChanged
         {
             add { CommandManager.RequerySuggested += value; }
             remove { CommandManager.RequerySuggested -= value; }
         }
     }
+
+    #endregion
 }
